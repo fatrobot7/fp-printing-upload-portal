@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mailing-pros-upload-portal
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: mailing-pros-data
+      mountPath: /data
+      sizeGB: 5

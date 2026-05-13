@@ -1,0 +1,5 @@
+node_modules
+uploads
+jobs
+.DS_Store
+tmp-sample.pdf
