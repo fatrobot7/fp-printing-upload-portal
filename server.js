@@ -148,10 +148,10 @@ function renderPage(content, options = {}) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mailing Pros Upload Portal</title>
+    <title>FP Printing Upload Portal</title>
     <script>
       (() => {
-        const savedTheme = localStorage.getItem('mailing-pros-theme');
+        const savedTheme = localStorage.getItem('fp-printing-theme');
         const theme = savedTheme || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
       })();
@@ -1084,7 +1084,7 @@ function renderPage(content, options = {}) {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', nextTheme);
-        localStorage.setItem('mailing-pros-theme', nextTheme);
+        localStorage.setItem('fp-printing-theme', nextTheme);
         syncThemeUi(nextTheme);
       });
     }
@@ -1857,7 +1857,7 @@ async function generateProofExports(filePath, jobRecord = null) {
   const pdfData = new Uint8Array(fs.readFileSync(filePath));
   const doc = await pdfjsLib.getDocument({ data: pdfData }).promise;
   const exports = [];
-  const pdfDoc = new PDFDocument({ title: 'Mailing Pros Proof', producer: 'Mailing Pros Upload Portal' });
+  const pdfDoc = new PDFDocument({ title: 'FP Printing Proof', producer: 'FP Printing Upload Portal' });
   const activeRule = jobRecord?.productCategory && jobRecord?.productSize
     ? buildProductRule(jobRecord.productCategory, jobRecord.productSize)
     : null;
@@ -2022,7 +2022,7 @@ app.get('/', (_req, res) => {
       <div class="hero">
         <div class="card hero-panel">
           <div class="hero-copy">
-            <a class="eyebrow eyebrow-link" href="/">📬 Mailing Pros print preflight</a>
+            <a class="eyebrow eyebrow-link" href="/">📬 FP Printing print preflight</a>
             <h1>Select a product &amp; size. Upload the file and see the proof. Approve job.</h1>
             <p><a class="staff-action-link" href="/staff">Open staff review queue</a></p>
             <p class="muted">This portal stays focused on preflight, but the homepage now helps clients choose a product category first, then a size that matches the job they are uploading.</p>
@@ -2120,7 +2120,7 @@ app.get('/staff', (_req, res) => {
       <div class="hero">
         <div class="card hero-panel" style="--hero-burst:rgba(134,168,255,.26);">
           <div class="hero-copy">
-            <a class="eyebrow eyebrow-link" href="/">📬 Mailing Pros print preflight</a>
+            <a class="eyebrow eyebrow-link" href="/">📬 FP Printing print preflight</a>
             <h1>Staff review queue</h1>
             <p class="muted">A live intake board for uploaded jobs, proof status, and orientation signoff.</p>
           </div>
@@ -2220,7 +2220,7 @@ app.get('/proof-export', async (req, res) => {
       <div class="stack">
         <div class="card hero-panel" style="--hero-burst:rgba(134,168,255,.26);">
           <div class="hero-copy">
-            <a class="eyebrow eyebrow-link" href="/">📬 Mailing Pros print preflight</a>
+            <a class="eyebrow eyebrow-link" href="/">📬 FP Printing print preflight</a>
             <h1>Proof export ready</h1>
             <p class="muted">${jobName}</p>
             <p class="muted">This proof set was exported at 72 DPI with a repeated diagonal PROOF watermark for safe client review.</p>
@@ -2461,7 +2461,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       <div class="stack">
         <div class="card hero-panel" style="--hero-burst:${heroBurst};">
           <div class="hero-copy">
-            <a class="eyebrow eyebrow-link" href="/">📬 Mailing Pros print preflight</a>
+            <a class="eyebrow eyebrow-link" href="/">📬 FP Printing print preflight</a>
             <h1>${req.body.jobName || 'Untitled job'}</h1>
             <p><span class="pill result-pill ${badgeClass}">${pretty}</span></p>
             <p class="muted">Client: ${req.body.clientName || 'Unknown'} · ${req.body.email || 'No email'} · ${req.body.mailPieceType || 'Unknown type'}</p>
@@ -2569,6 +2569,6 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
 });
 
 app.listen(port, host, () => {
-  console.log(`Mailing Pros upload portal running on http://${host}:${port}`);
+  console.log(`FP Printing upload portal running on http://${host}:${port}`);
   console.log(`Using data directory: ${dataRoot}`);
 });
