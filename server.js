@@ -1209,6 +1209,19 @@ function renderPage(content, options = {}) {
         align-items: center;
         justify-items: center;
       }
+      .proof-controls-kicker {
+        margin-bottom: 10px;
+        border-color: rgba(255,255,255,.12);
+        background: rgba(255,255,255,.05);
+      }
+      .proof-title {
+        margin-bottom: 6px;
+        color: #effbff;
+      }
+      .proof-subtitle {
+        margin-bottom: 0;
+        color: rgba(218,244,255,.72);
+      }
       .proof-controls-copy {
         display: grid;
         gap: 8px;
@@ -1742,25 +1755,39 @@ function renderPage(content, options = {}) {
         border-radius: 4px;
         border: 1px solid rgba(255,255,255,.18);
       }
+      .legend-swatch.bleed { background: var(--bleed); }
+      .legend-swatch.trim { background: transparent; border: 2px solid #fff; }
+      .legend-swatch.print { background: rgba(255,255,255,.12); }
+      .legend-swatch.lowres { background: rgba(34, 211, 238, .28); border-color: rgba(103, 232, 249, .98); }
+      .legend-swatch.export { background: rgba(20,30,45,.15); }
       .proof-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       html[data-theme="light"] .proof-card {
         --hud-cyan: #0ea5e9;
         --hud-cyan-strong: #0f172a;
-        --hud-cyan-line: rgba(14, 165, 233, 0.22);
-        --hud-cyan-glow: rgba(14, 165, 233, 0.14);
+        --hud-cyan-line: rgba(14, 165, 233, 0.16);
+        --hud-cyan-glow: rgba(14, 165, 233, 0.08);
         --hud-orange: #f97316;
-        --hud-orange-soft: rgba(249, 115, 22, 0.14);
+        --hud-orange-soft: rgba(249, 115, 22, 0.10);
+        color: #0f172a;
         background:
-          linear-gradient(180deg, rgba(255,255,255,0.96), rgba(247,250,252,0.92)),
-          linear-gradient(90deg, rgba(14,165,233,0.03), transparent 42%, rgba(249,115,22,0.03));
+          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,252,0.96));
         border-color: rgba(15, 23, 42, 0.08);
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.72),
-          0 0 0 1px rgba(14,165,233,.04),
-          0 24px 60px rgba(15,23,42,.08);
+          inset 0 1px 0 rgba(255,255,255,.86),
+          0 0 0 1px rgba(15,23,42,.03),
+          0 20px 44px rgba(15,23,42,.08);
+      }
+      html[data-theme="light"] .proof-card .section-kicker,
+      html[data-theme="light"] .proof-card strong,
+      html[data-theme="light"] .proof-card h2,
+      html[data-theme="light"] .proof-card h3,
+      html[data-theme="light"] .proof-card label,
+      html[data-theme="light"] .proof-card .stat-value {
+        color: #0f172a;
       }
       html[data-theme="light"] .proof-toolbar h2,
-      html[data-theme="light"] .proof-controls-copy h3 {
+      html[data-theme="light"] .proof-controls-copy h3,
+      html[data-theme="light"] .proof-title {
         color: #111827 !important;
       }
       html[data-theme="light"] .proof-toolbar .muted,
@@ -1768,7 +1795,8 @@ function renderPage(content, options = {}) {
       html[data-theme="light"] .proof-status-note .muted,
       html[data-theme="light"] .proof-legend,
       html[data-theme="light"] .proof-angle-readout,
-      html[data-theme="light"] .proof-confirm small {
+      html[data-theme="light"] .proof-confirm small,
+      html[data-theme="light"] .proof-subtitle {
         color: rgba(31, 41, 55, 0.74) !important;
       }
       html[data-theme="light"] .proof-signal-chip {
@@ -1812,15 +1840,13 @@ function renderPage(content, options = {}) {
         box-shadow: 0 14px 30px rgba(14,165,233,.12), 0 10px 20px rgba(15,23,42,.06);
       }
       html[data-theme="light"] .proof-controls-callout {
-        border-color: rgba(14, 165, 233, 0.2);
+        border-color: rgba(15, 23, 42, 0.08);
         background:
-          radial-gradient(circle at 16% 22%, rgba(14, 165, 233, 0.12), transparent 24%),
-          radial-gradient(circle at 86% 18%, rgba(249, 115, 22, 0.1), transparent 20%),
-          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,247,250,0.94));
+          linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,247,250,0.95));
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,.86),
-          0 0 0 1px rgba(14,165,233,.04),
-          0 22px 44px rgba(15,23,42,.08);
+          inset 0 1px 0 rgba(255,255,255,.9),
+          0 0 0 1px rgba(15,23,42,.03),
+          0 18px 34px rgba(15,23,42,.06);
       }
       html[data-theme="light"] .proof-controls-callout::before {
         background:
@@ -1830,86 +1856,121 @@ function renderPage(content, options = {}) {
       html[data-theme="light"] .proof-controls-callout::after {
         color: rgba(3, 105, 161, 0.28);
       }
+      html[data-theme="light"] .proof-controls-kicker {
+        border-color: rgba(15,23,42,.08);
+        background: rgba(15,23,42,.03);
+      }
       html[data-theme="light"] .proof-stage {
         border-color: rgba(15, 23, 42, 0.08);
         background:
-          radial-gradient(circle at 14% 0%, rgba(14, 165, 233, .10), transparent 26%),
-          radial-gradient(circle at 86% 14%, rgba(249, 115, 22, .08), transparent 18%),
-          linear-gradient(90deg, rgba(14, 165, 233, .05) 1px, transparent 1px),
-          linear-gradient(rgba(14, 165, 233, .04) 1px, transparent 1px),
-          linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 22%),
-          linear-gradient(180deg, #f9fcff 0%, #f2f7fb 46%, #ecf2f8 100%);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+          linear-gradient(90deg, rgba(14, 165, 233, .035) 1px, transparent 1px),
+          linear-gradient(rgba(14, 165, 233, .03) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(255,255,255,.64), rgba(255,255,255,0) 22%),
+          linear-gradient(180deg, #fbfdff 0%, #f4f7fb 46%, #edf2f7 100%);
+        background-size: 42px 42px, 42px 42px, auto, auto;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.78);
       }
       html[data-theme="light"] .proof-stage::before {
-        background: linear-gradient(180deg, rgba(14,165,233,.06), transparent 18%, transparent 82%, rgba(249,115,22,.05));
+        background: linear-gradient(180deg, rgba(14,165,233,.045), transparent 18%, transparent 82%, rgba(249,115,22,.04));
       }
       html[data-theme="light"] .proof-stage::after {
-        border-color: rgba(14, 165, 233, 0.08);
+        border-color: rgba(15, 23, 42, 0.06);
+      }
+      html[data-theme="light"] .proof-tech-overlay {
+        opacity: .22;
       }
       html[data-theme="light"] .proof-tech-corner {
-        border-color: rgba(3, 105, 161, 0.62);
-        filter: drop-shadow(0 0 8px rgba(14,165,233,.12));
+        border-color: rgba(3, 105, 161, 0.28);
+        filter: none;
       }
       html[data-theme="light"] .proof-tech-label {
-        border-color: rgba(14, 165, 233, 0.18);
-        background: rgba(255,255,255,.82);
+        border-color: rgba(15, 23, 42, 0.08);
+        background: rgba(255,255,255,.9);
         color: #0f172a;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 8px 18px rgba(15,23,42,.06);
+        box-shadow: 0 6px 14px rgba(15,23,42,.05);
       }
       html[data-theme="light"] .proof-tech-label.top-right {
         color: #9a3412;
-        border-color: rgba(249, 115, 22, 0.24);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.72), 0 8px 18px rgba(249,115,22,.08);
+        border-color: rgba(249, 115, 22, 0.18);
+        box-shadow: 0 6px 14px rgba(249,115,22,.06);
       }
       html[data-theme="light"] .proof-tech-radar {
-        border-color: rgba(14, 165, 233, 0.18);
-        background:
-          radial-gradient(circle, rgba(14, 165, 233, 0.10), transparent 58%),
-          linear-gradient(90deg, transparent 49%, rgba(14, 165, 233, 0.16) 50%, transparent 51%),
-          linear-gradient(transparent 49%, rgba(14, 165, 233, 0.16) 50%, transparent 51%);
-        box-shadow: 0 0 18px rgba(14,165,233,.08);
-      }
-      html[data-theme="light"] .proof-tech-radar::after {
-        border-color: rgba(14, 165, 233, 0.14);
+        display: none;
       }
       html[data-theme="light"] .proof-sheet,
       html[data-theme="light"] .proof-print-piece {
-        border-color: rgba(14, 165, 233, 0.24);
-        box-shadow: 0 0 0 1px rgba(255,255,255,.76), 0 16px 40px rgba(15,23,42,.12), 0 0 22px rgba(14,165,233,.06);
+        border-color: rgba(15, 23, 42, 0.12);
+        box-shadow: 0 0 0 1px rgba(255,255,255,.82), 0 16px 36px rgba(15,23,42,.10);
       }
       html[data-theme="light"] .proof-print-piece::after,
       html[data-theme="light"] .proof-safe.trim::after,
       html[data-theme="light"] .proof-face-label,
       html[data-theme="light"] .proof-magnifier::before {
-        background: rgba(255,255,255,.92);
-        border: 1px solid rgba(14,165,233,.18);
+        background: rgba(255,255,255,.94);
+        border: 1px solid rgba(15,23,42,.10);
         color: #0f172a;
       }
       html[data-theme="light"] .proof-safe.trim {
         box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 18px rgba(14,165,233,.10);
       }
       html[data-theme="light"] .proof-confirm {
-        border-color: rgba(249, 115, 22, .28);
-        background: linear-gradient(180deg, rgba(255, 237, 213, .62), rgba(255, 255, 255, .86));
+        border-color: rgba(249, 115, 22, .24);
+        background: linear-gradient(180deg, rgba(255, 247, 237, .94), rgba(255, 255, 255, .98));
         color: #9a3412;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 14px 28px rgba(15,23,42,.06);
+        box-shadow: 0 12px 24px rgba(15,23,42,.05);
       }
       html[data-theme="light"] .proof-confirm::before {
-        background: rgba(249, 115, 22, .12);
-        border-color: rgba(249, 115, 22, .28);
+        background: rgba(249, 115, 22, .10);
+        border-color: rgba(249, 115, 22, .24);
         color: #9a3412;
+      }
+      html[data-theme="light"] .proof-face-placeholder {
+        color: #334155;
+        background: linear-gradient(180deg, rgba(224,242,254,.66), rgba(255,255,255,.96));
       }
       html[data-theme="light"] .proof-3d-controls,
       html[data-theme="light"] .proof-status-note,
       html[data-theme="light"] .proof-export-card,
       html[data-theme="light"] .legend-key {
         border-color: rgba(15, 23, 42, .08);
-        background: rgba(255,255,255,.72);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.78);
+        background: rgba(255,255,255,.92);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+      }
+      html[data-theme="light"] .proof-3d-controls {
+        background: rgba(255,255,255,.86);
+      }
+      html[data-theme="light"] .proof-3d-slider-row input[type="range"] {
+        accent-color: #0ea5e9;
       }
       html[data-theme="light"] .legend-swatch {
         border-color: rgba(15, 23, 42, 0.18);
+      }
+      html[data-theme="light"] .legend-swatch.trim {
+        border-color: #0f172a;
+      }
+      html[data-theme="light"] .legend-swatch.print {
+        background: rgba(15,23,42,.12);
+      }
+      html[data-theme="light"] .legend-swatch.export {
+        background: rgba(148,163,184,.22);
+      }
+      html[data-theme="light"] .proof-lowres-banner {
+        border-color: rgba(249, 115, 22, .24);
+        background: linear-gradient(180deg, rgba(255, 247, 237, .96), rgba(255,255,255,.98));
+      }
+      html[data-theme="light"] .proof-card .proof-status-note strong,
+      html[data-theme="light"] .proof-card .legend-key strong,
+      html[data-theme="light"] .proof-card .proof-lowres-banner strong {
+        color: #0f172a;
+      }
+      html[data-theme="light"] .proof-lowres-box {
+        border-color: rgba(249, 115, 22, .88);
+        background: rgba(249, 115, 22, .18);
+        box-shadow: 0 0 0 9999px rgba(249, 115, 22, .05) inset, 0 0 0 1px rgba(255,255,255,.18), 0 0 16px rgba(249, 115, 22, .14);
+      }
+      html[data-theme="light"] .proof-lowres-box span {
+        background: rgba(249, 115, 22, .94);
+        color: #431407;
       }
       .meta-chip {
         border: 1px solid var(--line); border-radius: 20px; padding: 14px 15px;
@@ -3475,7 +3536,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
             <div class="proof-controls-callout">
               <div class="proof-controls-grid">
                 <div class="proof-controls-copy">
-                  <p class="section-kicker" style="margin-bottom:10px; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.05);">Proofing controls</p>
+                  <p class="section-kicker proof-controls-kicker">Proofing controls</p>
                   <h3>Use these review tools before anyone signs off.</h3>
                   <p>Flip between bleed, print, 3D, magnify, and proof export so orientation mistakes or edge issues jump out before production.</p>
                 </div>
@@ -3490,8 +3551,8 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
             </div>
             <div class="proof-toolbar">
               <div>
-                <h2 style="margin-bottom:6px; color:#effbff;">Visual print proof</h2>
-                <p class="muted" style="margin-bottom:0; color:rgba(218,244,255,.72);">Bleed view shows the ${formatDimension(activeRule.bleedInset)}-inch trim-off band. Print view shows only the finished ${activeRule.sizeLabel} piece after trim.</p>
+                <h2 class="proof-title">Visual print proof</h2>
+                <p class="muted proof-subtitle">Bleed view shows the ${formatDimension(activeRule.bleedInset)}-inch trim-off band. Print view shows only the finished ${activeRule.sizeLabel} piece after trim.</p>
               </div>
               <div style="display:grid; gap:10px; justify-items:end;">
                 <div class="proof-tabs">${proofTabs}</div>
@@ -3509,11 +3570,11 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
             <div class="proof-status-note"><strong>Orientation confirmation</strong><p class="muted" data-orientation-status style="margin:8px 0 0;">Waiting on client orientation confirmation</p></div>
             ${lowResolutionImages.length ? `<div class="proof-lowres-banner"><strong>${lowResolutionImages.length} low-resolution image${lowResolutionImages.length === 1 ? '' : 's'} flagged</strong><p class="muted" style="margin:8px 0 0;">Turn on the low-res highlight to wash the affected placed images in magenta directly on the proof.</p></div>` : ''}
             <div class="proof-legend">
-              <div class="legend-key"><span class="legend-swatch" style="background: var(--bleed);"></span><strong>Bleed zone</strong><span>trimmed off in production</span></div>
-              <div class="legend-key"><span class="legend-swatch" style="background: transparent; border: 2px solid #fff;"></span><strong>Finished size</strong><span>visible after trim</span></div>
-              <div class="legend-key"><span class="legend-swatch" style="background: rgba(255,255,255,.12);"></span><strong>Print view</strong><span>shows the trimmed piece only</span></div>
-              ${lowResolutionImages.length ? '<div class="legend-key"><span class="legend-swatch" style="background: rgba(34, 211, 238, .28); border-color: rgba(103, 232, 249, .98);"></span><strong>Low-res image</strong><span>cyan overlay marks artwork below DPI spec</span></div>' : ''}
-              <div class="legend-key"><span class="legend-swatch" style="background: rgba(20,30,45,.15);"></span><strong>Proof export</strong><span>72 DPI PDF/PNG with repeated diagonal PROOF watermark</span></div>
+              <div class="legend-key"><span class="legend-swatch bleed"></span><strong>Bleed zone</strong><span>trimmed off in production</span></div>
+              <div class="legend-key"><span class="legend-swatch trim"></span><strong>Finished size</strong><span>visible after trim</span></div>
+              <div class="legend-key"><span class="legend-swatch print"></span><strong>Print view</strong><span>shows the trimmed piece only</span></div>
+              ${lowResolutionImages.length ? '<div class="legend-key"><span class="legend-swatch lowres"></span><strong>Low-res image</strong><span>cyan overlay marks artwork below DPI spec</span></div>' : ''}
+              <div class="legend-key"><span class="legend-swatch export"></span><strong>Proof export</strong><span>72 DPI PDF/PNG with repeated diagonal PROOF watermark</span></div>
             </div>
           </div>
         </div>
