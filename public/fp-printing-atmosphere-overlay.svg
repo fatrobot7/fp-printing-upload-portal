@@ -1,0 +1,41 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(282 160) rotate(27.225) scale(514.137 383.952)">
+      <stop stop-color="#6EA3FF" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#6EA3FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1324 212) rotate(145.17) scale(395.89 295.311)">
+      <stop stop-color="#5EF0D4" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#5EF0D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowC" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1100 864) rotate(170.015) scale(545.606 376.91)">
+      <stop stop-color="#BE8FFF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#BE8FFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sweep" x1="296" y1="924" x2="1124" y2="412" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5E93" stop-opacity="0.22"/>
+      <stop offset="0.58" stop-color="#6EA3FF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#5EF0D4" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1600" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#glowA)"/>
+  <circle cx="1324" cy="212" r="396" fill="url(#glowB)"/>
+  <circle cx="1100" cy="864" r="546" fill="url(#glowC)"/>
+  <path d="M216 981C326.084 766.336 538.38 600.275 778.334 545.777C887.478 520.989 1002.53 523.604 1110.58 553.414C1205.59 579.63 1295.48 623.145 1380 681" stroke="url(#sweep)" stroke-width="38" stroke-linecap="round"/>
+  <g opacity="0.7">
+    <path d="M228 935C319.443 752.66 499.523 614.101 709.425 567.271C919.326 520.441 1139.43 569.486 1306 701" stroke="white" stroke-opacity="0.22" stroke-width="2" stroke-dasharray="6 12"/>
+    <path d="M1230 124C1306.68 178.519 1361.88 258.146 1387.94 349.164C1414 440.183 1409.35 537.419 1374.75 625.5" stroke="white" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="10 14"/>
+    <rect x="1116" y="120" width="124" height="124" rx="30" stroke="white" stroke-opacity="0.18"/>
+    <rect x="1146" y="150" width="64" height="64" rx="14" stroke="white" stroke-opacity="0.3"/>
+    <circle cx="264" cy="196" r="18" stroke="white" stroke-opacity="0.28"/>
+    <circle cx="264" cy="196" r="4" fill="white" fill-opacity="0.28"/>
+    <circle cx="1434" cy="878" r="22" stroke="white" stroke-opacity="0.18"/>
+  </g>
+  <g filter="url(#blur)" opacity="0.35">
+    <path d="M996 144C1116.31 162.492 1230.5 219.664 1334 310" stroke="#84AFFF" stroke-width="16" stroke-linecap="round"/>
+    <path d="M374 1020C505.657 890.514 680.57 813.917 868 804" stroke="#5EF0D4" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>

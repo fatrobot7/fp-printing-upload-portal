@@ -1,0 +1,30 @@
+<svg width="1600" height="1100" viewBox="0 0 1600 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(291 139) rotate(24.8) scale(485 361)">
+      <stop stop-color="#8AB5FF" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#8AB5FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1277 223) rotate(144.9) scale(384 295)">
+      <stop stop-color="#8CF0CF" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#8CF0CF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="c" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1117 783) rotate(177.7) scale(512 378)">
+      <stop stop-color="#C28BFF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#C28BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="d" x1="224" y1="868" x2="720" y2="482" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6FA4" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FF6FA4" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g opacity="0.95">
+    <circle cx="291" cy="139" r="485" fill="url(#a)"/>
+    <circle cx="1277" cy="223" r="384" fill="url(#b)"/>
+    <circle cx="1117" cy="783" r="512" fill="url(#c)"/>
+    <path d="M257 909C338.538 765.25 479.591 646.184 643.334 585.777C723.886 556.061 808.29 540.079 894.112 538.237C953.441 536.963 1012.7 542.328 1071.44 554.265" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-dasharray="8 10"/>
+    <path d="M1188 106C1275.91 163.632 1338.18 257.281 1361.64 364.5C1375.86 429.494 1376.58 497.855 1363.74 563.131" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="10 14"/>
+    <rect x="1102" y="122" width="128" height="128" rx="26" stroke="rgba(255,255,255,.22)"/>
+    <rect x="1134" y="154" width="64" height="64" rx="10" stroke="rgba(255,255,255,.35)"/>
+    <path d="M228 869C310.89 724.876 455.642 612.957 623.334 557.777C703.886 531.061 788.29 519.079 874.112 521.237C931.041 522.669 987.949 531.592 1043.44 548.265" stroke="url(#d)" stroke-width="28" stroke-linecap="round"/>
+  </g>
+</svg>

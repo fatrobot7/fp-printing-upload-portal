@@ -1,0 +1,21 @@
+<svg width="900" height="900" viewBox="0 0 900 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="90" height="90" patternUnits="userSpaceOnUse">
+      <path d="M90 0H0V90" stroke="rgba(255,255,255,.08)"/>
+      <circle cx="0" cy="0" r="2" fill="rgba(255,255,255,.22)"/>
+    </pattern>
+  </defs>
+  <rect width="900" height="900" fill="url(#grid)"/>
+  <g opacity="0.42" stroke="white">
+    <path d="M110 120h112m-56-56v112"/>
+    <path d="M688 180h112m-56-56v112"/>
+    <path d="M168 720h112m-56-56v112"/>
+    <path d="M646 632h112m-56-56v112"/>
+  </g>
+  <g opacity="0.18" fill="white">
+    <circle cx="242" cy="208" r="5"/>
+    <circle cx="720" cy="330" r="5"/>
+    <circle cx="580" cy="590" r="5"/>
+    <circle cx="286" cy="674" r="5"/>
+  </g>
+</svg>
