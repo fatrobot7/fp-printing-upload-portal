@@ -14,6 +14,14 @@ const port = process.env.PORT || 3030;
 const host = process.env.HOST || '0.0.0.0';
 const dataRoot = process.env.DATA_DIR || __dirname;
 const publicDir = path.join(__dirname, 'public');
+const heroSceneAssetPath = path.join(publicDir, 'fp-printing-hero-scene.svg');
+const heroSceneAssetVersion = (() => {
+  try {
+    return fs.statSync(heroSceneAssetPath).mtimeMs.toFixed(0);
+  } catch {
+    return Date.now().toString();
+  }
+})();
 
 const uploadsDir = path.join(dataRoot, 'uploads');
 const jobsDir = path.join(dataRoot, 'jobs');
@@ -116,6 +124,19 @@ const PRODUCT_CATEGORIES = {
 };
 
 const DEFAULT_CATEGORY_KEY = 'postcards';
+
+function slugify(input) {
+  return input.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+const POSTCARD_TEMPLATE_FILES = PRODUCT_CATEGORIES.postcards.sizes.map((size) => ({
+  ...size,
+  fileName: `${slugify(size.label)}-${size.value.replace(/\./g, '_')}-template.pdf`,
+  bleedValue: (() => {
+    const [w, h] = size.value.split('x').map(Number);
+    return `${(w + (DEFAULT_BLEED_INCHES * 2)).toFixed(2)} × ${(h + (DEFAULT_BLEED_INCHES * 2)).toFixed(2)} in`;
+  })(),
+}));
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
@@ -842,53 +863,15 @@ function renderPage(content, options = {}) {
         min-height: 210px;
         border-radius: 24px;
         border: 1px solid rgba(255,255,255,.08);
-        background:
-          linear-gradient(145deg, rgba(255,255,255,.98), rgba(240,240,240,.94));
+        background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
         box-shadow: 0 18px 44px rgba(0,0,0,.22);
         overflow: hidden;
       }
-      .hero-paper-art::before,
-      .hero-paper-art::after {
-        content: "";
-        position: absolute;
-        border-radius: 22px;
-        background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(238,238,238,.92));
-        border: 1px solid rgba(0,0,0,.08);
-        box-shadow: 0 14px 30px rgba(23,39,82,.12);
-      }
-      .hero-paper-art::before {
-        width: 54%;
-        height: 72%;
-        left: 9%;
-        top: 12%;
-        transform: rotate(-8deg);
-      }
-      .hero-paper-art::after {
-        width: 52%;
-        height: 70%;
-        right: 10%;
-        top: 16%;
-        transform: rotate(10deg);
-      }
-      .hero-paper-grid,
-      .hero-paper-grid::before,
-      .hero-paper-grid::after {
-        position: absolute;
-        border-radius: 18px;
-      }
-      .hero-paper-grid {
-        inset: 18% 14% 18% 14%;
-        z-index: 1;
-      }
-      .hero-paper-grid::before {
-        content: "";
-        inset: 0 34% 0 0;
-        border: 2px solid rgba(220, 38, 38, .4);
-      }
-      .hero-paper-grid::after {
-        content: "";
-        inset: 10% 0 10% 42%;
-        border: 2px solid rgba(0,0,0,.16);
+      .hero-paper-art img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       .hero-metric-bar {
         position: relative;
@@ -1088,6 +1071,55 @@ function renderPage(content, options = {}) {
       }
       .spec-list { margin: 0; padding-left: 18px; color: var(--muted); }
       .spec-list li { margin-bottom: 8px; }
+      .template-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .template-card {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border-radius: 22px;
+        border: 1px solid var(--card-border);
+        background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      }
+      .template-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .template-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--badge-border);
+        background: var(--badge-bg);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .template-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .template-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.04);
+        color: var(--ink);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .template-link:hover {
+        border-color: rgba(220,38,38,.28);
+        background: rgba(220,38,38,.08);
+      }
       .two-col { display:grid; gap:16px; grid-template-columns: 1fr; }
       .details-grid { display:grid; gap:16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .proof-card {
@@ -2029,9 +2061,10 @@ function renderPage(content, options = {}) {
         .staff-job { grid-template-columns: 1fr; }
         .proof-signal-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .footer-link-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
       @media (max-width: 800px) {
-        .grid, .proof-meta, .info-grid, .highlight-grid, .hero-stats, .details-grid, .staff-summary, .staff-mini-grid, .proof-controls-grid, .hero-metric-bar, .proof-signal-strip, .footer-link-grid { grid-template-columns: 1fr; }
+        .grid, .proof-meta, .info-grid, .highlight-grid, .hero-stats, .details-grid, .staff-summary, .staff-mini-grid, .proof-controls-grid, .hero-metric-bar, .proof-signal-strip, .footer-link-grid, .template-grid { grid-template-columns: 1fr; }
         .ambient-panel.two,
         .ambient-orb.three,
         .ambient-dots.two,
@@ -3034,6 +3067,23 @@ app.get('/', (_req, res) => {
     .map(([value, category]) => `<option value="${value}" ${value === DEFAULT_CATEGORY_KEY ? 'selected' : ''}>${category.label}</option>`)
     .join('');
   const defaultCategory = PRODUCT_CATEGORIES[DEFAULT_CATEGORY_KEY];
+  const templateCards = POSTCARD_TEMPLATE_FILES.map((template) => `
+    <div class="template-card">
+      <div>
+        <p class="section-kicker">Postcard template</p>
+        <h3 style="margin:8px 0 6px;">${template.label}</h3>
+        <p class="muted" style="margin-bottom:0;">Finished trim ${template.value} in · file built with 0.125-inch bleed on all sides.</p>
+      </div>
+      <div class="template-meta">
+        <span class="template-pill">Trim ${template.value} in</span>
+        <span class="template-pill">Bleed file ${template.bleedValue}</span>
+      </div>
+      <div class="template-actions">
+        <a class="template-link" href="/assets/templates/postcards/${template.fileName}" target="_blank" rel="noopener">Open PDF</a>
+        <a class="template-link" href="/assets/templates/postcards/${template.fileName}" download>Download</a>
+      </div>
+    </div>
+  `).join('');
 
   res.send(renderPage(`
     <div class="stack">
@@ -3069,7 +3119,7 @@ app.get('/', (_req, res) => {
             <div class="hero-art-card">
               <div class="hero-orb one"></div>
               <div class="hero-orb two"></div>
-              <div class="hero-paper-art" aria-hidden="true"><div class="hero-paper-grid"></div></div>
+              <div class="hero-paper-art" aria-hidden="true"><img src="/assets/fp-printing-hero-scene.svg?v=${heroSceneAssetVersion}" alt=""></div>
               <div class="hero-metric-bar">
                 <div class="hero-metric"><strong>Trim</strong><span>Visible</span></div>
                 <div class="hero-metric"><strong>Bleed</strong><span>0.125 in</span></div>
@@ -3154,6 +3204,18 @@ app.get('/', (_req, res) => {
           <li>Specs now appear after category and size are chosen, so the upload flow stays focused.</li>
           <li>The current backend proofing rule can still enforce the existing legal postcard inspection until broader product logic is added.</li>
         </ul>
+      </div>
+      <div class="card">
+        <div class="upload-panel-head">
+          <div>
+            <p class="section-kicker">Templates</p>
+            <h2>Download postcard templates with bleed already built in</h2>
+            <p class="muted">Each PDF is set to final file size with a 0.125-inch bleed on every edge. Clients can open one, design on top of it, and export back at the same dimensions.</p>
+          </div>
+        </div>
+        <div class="template-grid">
+          ${templateCards}
+        </div>
       </div>
     </div>
   `));

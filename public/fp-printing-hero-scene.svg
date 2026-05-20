@@ -1,0 +1,111 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="154" y1="62" x2="1058" y2="846" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13203E"/>
+      <stop offset="0.52" stop-color="#0C1630"/>
+      <stop offset="1" stop-color="#091120"/>
+    </linearGradient>
+    <radialGradient id="glowBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(898 170) rotate(142) scale(330 252)">
+      <stop stop-color="#72A6FF" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#72A6FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowMint" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(252 676) rotate(8) scale(286 204)">
+      <stop stop-color="#8AF0CF" stop-opacity="0.64"/>
+      <stop offset="1" stop-color="#8AF0CF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRed" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(445 162) rotate(39) scale(220 160)">
+      <stop stop-color="#FF7597" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FF7597" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheetWhite" x1="208" y1="120" x2="548" y2="526" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E3EDFF"/>
+    </linearGradient>
+    <linearGradient id="sheetBlue" x1="510" y1="174" x2="870" y2="582" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9F4FF"/>
+      <stop offset="1" stop-color="#BED9FF"/>
+    </linearGradient>
+    <linearGradient id="sheetMint" x1="324" y1="470" x2="812" y2="796" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8FFF7"/>
+      <stop offset="1" stop-color="#AEF0D8"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="774" y1="558" x2="1056" y2="810" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13294D"/>
+      <stop offset="1" stop-color="#0C1B35"/>
+    </linearGradient>
+    <filter id="shadow" x="94" y="80" width="980" height="734" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000919" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="900" rx="44" fill="url(#bg)"/>
+  <rect width="1200" height="900" rx="44" fill="url(#glowBlue)"/>
+  <rect width="1200" height="900" rx="44" fill="url(#glowMint)"/>
+  <rect width="1200" height="900" rx="44" fill="url(#glowRed)"/>
+
+  <g opacity="0.26">
+    <path d="M108 136H1092" stroke="white" stroke-opacity="0.24" stroke-dasharray="7 12"/>
+    <path d="M108 762H1092" stroke="white" stroke-opacity="0.16" stroke-dasharray="7 12"/>
+    <path d="M210 84V816" stroke="white" stroke-opacity="0.08"/>
+    <path d="M990 84V816" stroke="white" stroke-opacity="0.08"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(214 128) rotate(-8 190 214)">
+      <rect x="56" y="54" width="372" height="470" rx="30" fill="url(#sheetWhite)"/>
+      <rect x="84" y="86" width="316" height="406" rx="18" stroke="#7F9BDB" stroke-opacity="0.28" stroke-width="2"/>
+      <path d="M104 126H330" stroke="#7B91D5" stroke-opacity="0.48" stroke-width="8" stroke-linecap="round"/>
+      <path d="M104 162H364" stroke="#A7B9E5" stroke-opacity="0.46" stroke-width="6" stroke-linecap="round"/>
+      <path d="M104 194H294" stroke="#A7B9E5" stroke-opacity="0.28" stroke-width="6" stroke-linecap="round"/>
+      <rect x="102" y="238" width="278" height="152" rx="22" fill="#EEF5FF"/>
+      <path d="M126 270H350" stroke="#5D80EF" stroke-opacity="0.25" stroke-width="28" stroke-linecap="round"/>
+      <path d="M126 324H298" stroke="#7CEBC6" stroke-opacity="0.3" stroke-width="20" stroke-linecap="round"/>
+      <path d="M126 368H338" stroke="#B6C9F7" stroke-opacity="0.36" stroke-width="14" stroke-linecap="round"/>
+      <g opacity="0.82">
+        <path d="M76 76H116" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M76 76V116" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M368 76H408" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M408 76V116" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M76 462H116" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M76 422V462" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M368 462H408" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+        <path d="M408 422V462" stroke="#FF5F8F" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <g transform="translate(470 176) rotate(8 184 212)">
+      <rect x="56" y="54" width="372" height="470" rx="30" fill="url(#sheetBlue)" fill-opacity="0.98"/>
+      <rect x="88" y="86" width="308" height="404" rx="18" fill="#FDFEFF" fill-opacity="0.34"/>
+      <path d="M112 130H352" stroke="#F8FCFF" stroke-opacity="0.82" stroke-width="7" stroke-linecap="round"/>
+      <path d="M112 168H378" stroke="#D5E4FF" stroke-opacity="0.56" stroke-width="6" stroke-linecap="round"/>
+      <rect x="112" y="222" width="264" height="130" rx="22" fill="#FFFFFF" fill-opacity="0.48"/>
+      <path d="M136 258H346" stroke="#6188F6" stroke-opacity="0.34" stroke-width="28" stroke-linecap="round"/>
+      <path d="M136 308H304" stroke="#8BF1D0" stroke-opacity="0.3" stroke-width="18" stroke-linecap="round"/>
+      <path d="M112 392H346" stroke="#B9CEFF" stroke-opacity="0.48" stroke-width="6" stroke-linecap="round"/>
+      <path d="M112 430H292" stroke="#B9CEFF" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <g transform="translate(304 424) rotate(-2 216 130)">
+      <rect x="48" y="54" width="448" height="254" rx="30" fill="url(#sheetMint)" fill-opacity="0.98"/>
+      <rect x="90" y="94" width="364" height="170" rx="18" stroke="#F5FFFB" stroke-opacity="0.62" stroke-width="2"/>
+      <path d="M112 130H430" stroke="white" stroke-opacity="0.72" stroke-width="6" stroke-linecap="round"/>
+      <path d="M112 172H384" stroke="#5C82F5" stroke-opacity="0.24" stroke-width="20" stroke-linecap="round"/>
+      <path d="M112 212H312" stroke="#F76796" stroke-opacity="0.16" stroke-width="16" stroke-linecap="round"/>
+      <circle cx="422" cy="126" r="20" fill="#0C1831" fill-opacity="0.1"/>
+      <circle cx="422" cy="126" r="7" fill="#0C1831" fill-opacity="0.28"/>
+    </g>
+  </g>
+
+  <g>
+    <rect x="780" y="582" width="286" height="170" rx="28" fill="url(#panel)" stroke="rgba(255,255,255,.12)"/>
+    <text x="814" y="630" fill="#AFC3EE" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="2.8">LIVE PREFLIGHT</text>
+    <text x="814" y="684" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="800">Trim + bleed</text>
+    <text x="814" y="724" fill="#C0D0EE" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600">checked before staff review</text>
+  </g>
+
+  <g opacity="0.72">
+    <circle cx="968" cy="160" r="6" fill="white"/>
+    <circle cx="1004" cy="160" r="6" fill="#8CF0CF"/>
+    <circle cx="1040" cy="160" r="6" fill="#FF7597"/>
+  </g>
+</svg>
