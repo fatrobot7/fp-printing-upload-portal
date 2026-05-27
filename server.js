@@ -623,7 +623,7 @@ function renderPage(content, options = {}) {
         border-radius: 999px;
         border: 1px solid var(--badge-border);
         background: var(--badge-bg);
-        color: #ffffff;
+        color: var(--ink);
         font: inherit;
         font-weight: 800;
         cursor: pointer;
@@ -637,6 +637,12 @@ function renderPage(content, options = {}) {
         border-radius: 999px;
         background: linear-gradient(180deg, rgba(220,38,38,.92), rgba(185,28,28,.72));
         color: #fff;
+      }
+      html[data-theme="light"] .theme-toggle {
+        border-color: rgba(24,24,27,.08);
+        background: rgba(255,255,255,.9);
+        color: #18181b;
+        box-shadow: 0 12px 28px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.9);
       }
       html[data-theme="light"] .theme-toggle span {
         background: linear-gradient(180deg, rgba(83,126,247,.16), rgba(83,126,247,.08));
@@ -1609,20 +1615,98 @@ function renderPage(content, options = {}) {
         gap: 14px;
         padding: 18px;
         border-radius: 22px;
-        border: 1px solid rgba(255,255,255,.08);
-        background: rgba(5, 12, 24, 0.58);
+        border: 1px solid rgba(255,255,255,.12);
+        background:
+          linear-gradient(180deg, rgba(220, 38, 38, .18), rgba(5, 12, 24, 0) 42%),
+          rgba(5, 12, 24, 0.82);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.08),
+          0 18px 34px rgba(0,0,0,.34);
+      }
+      .proof-3d-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(255,255,255,.06);
+        color: #f8fafc;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        box-shadow: 0 0 0 1px rgba(220,38,38,.16), 0 12px 24px rgba(0,0,0,.24);
+      }
+      .proof-3d-hint::before {
+        content: "↔";
+        color: #fca5a5;
+        font-size: 14px;
+        line-height: 1;
       }
       .proof-3d-slider-row {
         display: grid;
-        gap: 8px;
+        gap: 10px;
+        padding: 14px 14px 12px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      }
+      .proof-3d-slider-row label {
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
       }
       .proof-3d-slider-row input[type="range"] {
         padding: 0;
         accent-color: var(--brand);
+        width: 100%;
+        height: 24px;
+        background: transparent;
+        cursor: ew-resize;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .proof-3d-slider-row input[type="range"]::-webkit-slider-runnable-track {
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(248,113,113,.92), rgba(220,38,38,1));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 4px rgba(220,38,38,.12);
+      }
+      .proof-3d-slider-row input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin-top: -5px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background: #fff;
+        box-shadow: 0 0 0 6px rgba(220,38,38,.22), 0 8px 18px rgba(0,0,0,.3);
+      }
+      .proof-3d-slider-row input[type="range"]::-moz-range-track {
+        height: 8px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(248,113,113,.92), rgba(220,38,38,1));
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), 0 0 0 4px rgba(220,38,38,.12);
+      }
+      .proof-3d-slider-row input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 0 6px rgba(220,38,38,.22), 0 8px 18px rgba(0,0,0,.3);
       }
       .proof-angle-readout {
         font-size: 13px;
-        color: #dce5fb;
+        color: #fca5a5;
+        font-weight: 700;
       }
       .proof-confirm {
         display: grid;
@@ -1793,6 +1877,46 @@ function renderPage(content, options = {}) {
       .legend-swatch.lowres { background: rgba(34, 211, 238, .28); border-color: rgba(103, 232, 249, .98); }
       .legend-swatch.export { background: rgba(20,30,45,.15); }
       .proof-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      html[data-theme="light"] .hero-panel {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.26)),
+          radial-gradient(circle at top left, rgba(220,38,38,.12), transparent 32%),
+          radial-gradient(circle at 90% 12%, rgba(14,165,233,.08), transparent 18%),
+          linear-gradient(160deg, rgba(255,255,255,.98), rgba(248,244,244,.94));
+      }
+      html[data-theme="light"] .hero-panel::before {
+        background: linear-gradient(135deg, rgba(255,255,255,.88), transparent 30%, transparent 70%, rgba(220,38,38,.05));
+      }
+      html[data-theme="light"] .hero-visual {
+        background:
+          radial-gradient(circle at 18% 14%, rgba(220,38,38,.1), transparent 18%),
+          radial-gradient(circle at 78% 24%, rgba(14,165,233,.08), transparent 20%),
+          linear-gradient(160deg, rgba(255,255,255,.98), rgba(244,240,240,.94));
+      }
+      html[data-theme="light"] .hero-visual::before {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.52), transparent 44%),
+          linear-gradient(90deg, rgba(15,23,42,.04) 1px, transparent 1px),
+          linear-gradient(rgba(15,23,42,.04) 1px, transparent 1px);
+        opacity: .75;
+      }
+      html[data-theme="light"] .hero-art-card {
+        background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.62));
+        border-color: rgba(24,24,27,.08);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.96), 0 20px 50px rgba(15,23,42,.08);
+      }
+      html[data-theme="light"] .hero-metric,
+      html[data-theme="light"] .trust-pill,
+      html[data-theme="light"] .highlight,
+      html[data-theme="light"] .stat {
+        background: rgba(255,255,255,.72);
+        border-color: rgba(24,24,27,.08);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.88);
+      }
+      html[data-theme="light"] .hero-paper-art {
+        background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.22));
+        border-color: rgba(24,24,27,.08);
+      }
       html[data-theme="light"] .proof-card {
         --hud-cyan: #0ea5e9;
         --hud-cyan-strong: #0f172a;
@@ -1971,8 +2095,36 @@ function renderPage(content, options = {}) {
       html[data-theme="light"] .proof-3d-controls {
         background: rgba(255,255,255,.86);
       }
+      html[data-theme="light"] .proof-3d-slider-row {
+        border-color: rgba(15, 23, 42, .08);
+        background: linear-gradient(180deg, rgba(14,165,233,.08), rgba(255,255,255,.88));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.94);
+      }
+      html[data-theme="light"] .proof-3d-slider-row label {
+        color: #0f172a;
+      }
+      html[data-theme="light"] .proof-3d-hint {
+        border-color: rgba(15, 23, 42, .12);
+        background: rgba(14,165,233,.1);
+        color: #0f172a;
+        box-shadow: 0 0 0 1px rgba(14,165,233,.12), 0 12px 24px rgba(15,23,42,.08);
+      }
+      html[data-theme="light"] .proof-3d-hint::before,
+      html[data-theme="light"] .proof-angle-readout {
+        color: #0369a1;
+      }
       html[data-theme="light"] .proof-3d-slider-row input[type="range"] {
         accent-color: #0ea5e9;
+      }
+      html[data-theme="light"] .proof-3d-slider-row input[type="range"]::-webkit-slider-runnable-track,
+      html[data-theme="light"] .proof-3d-slider-row input[type="range"]::-moz-range-track {
+        background: linear-gradient(90deg, rgba(56,189,248,.95), rgba(14,165,233,1));
+        box-shadow: inset 0 0 0 1px rgba(15,23,42,.08), 0 0 0 4px rgba(14,165,233,.1);
+      }
+      html[data-theme="light"] .proof-3d-slider-row input[type="range"]::-webkit-slider-thumb,
+      html[data-theme="light"] .proof-3d-slider-row input[type="range"]::-moz-range-thumb {
+        border-color: #ffffff;
+        box-shadow: 0 0 0 6px rgba(14,165,233,.16), 0 8px 18px rgba(15,23,42,.16);
       }
       html[data-theme="light"] .legend-swatch {
         border-color: rgba(15, 23, 42, 0.18);
@@ -2115,7 +2267,7 @@ function renderPage(content, options = {}) {
 
     function syncThemeUi(theme) {
       if (!themeLabel || !themeIcon) return;
-      themeLabel.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+      themeLabel.textContent = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
       themeIcon.textContent = theme === 'light' ? '☀️' : '🌙';
     }
 
@@ -3077,6 +3229,7 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
             </div>
           </div>
           <div class="proof-3d-controls">
+            <div class="proof-3d-hint">Drag the sliders to rotate the proof</div>
             <div class="proof-3d-slider-row">
               <label for="proof-rotation-x-${label}">Rotate on the X axis</label>
               <input id="proof-rotation-x-${label}" type="range" min="0" max="360" step="5" value="0" data-proof-rotation-x>
