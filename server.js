@@ -1645,22 +1645,22 @@ function renderPage(content, options = {}) {
       .proof-3d-hint {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         width: fit-content;
-        padding: 8px 12px;
+        padding: 10px 16px;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.16);
-        background: rgba(255,255,255,.06);
-        color: #f8fafc;
+        border: 1px solid rgba(103, 232, 249, .72);
+        background: linear-gradient(180deg, rgba(165, 243, 252, .96), rgba(34, 211, 238, .92));
+        color: #04131a;
         font-size: 11px;
         font-weight: 900;
         letter-spacing: .12em;
         text-transform: uppercase;
-        box-shadow: 0 0 0 1px rgba(220,38,38,.16), 0 12px 24px rgba(0,0,0,.24);
+        box-shadow: 0 14px 28px rgba(34, 211, 238, .24);
       }
       .proof-3d-hint::before {
         content: "↔";
-        color: #fca5a5;
+        color: #04131a;
         font-size: 14px;
         line-height: 1;
       }
@@ -2123,12 +2123,14 @@ function renderPage(content, options = {}) {
         color: #0f172a;
       }
       html[data-theme="light"] .proof-3d-hint {
-        border-color: rgba(15, 23, 42, .12);
-        background: rgba(14,165,233,.1);
-        color: #0f172a;
-        box-shadow: 0 0 0 1px rgba(14,165,233,.12), 0 12px 24px rgba(15,23,42,.08);
+        border-color: rgba(56, 189, 248, .7);
+        background: linear-gradient(180deg, rgba(186, 230, 253, .98), rgba(56, 189, 248, .92));
+        color: #082f49;
+        box-shadow: 0 14px 28px rgba(14,165,233,.18);
       }
-      html[data-theme="light"] .proof-3d-hint::before,
+      html[data-theme="light"] .proof-3d-hint::before {
+        color: #082f49;
+      }
       html[data-theme="light"] .proof-angle-readout {
         color: #0369a1;
       }
