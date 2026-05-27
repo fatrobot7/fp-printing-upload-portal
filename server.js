@@ -2530,6 +2530,31 @@ function matchesEitherOrientation(width, height, expectedWidth, expectedHeight, 
   return { portraitMatch, landscapeMatch, matches: portraitMatch || landscapeMatch };
 }
 
+function analyzePageAgainstRule(page, rule) {
+  const bleedMatch = matchesEitherOrientation(page.widthIn, page.heightIn, rule.bleedWidth, rule.bleedHeight, rule.tolerance);
+  const trimMatch = matchesEitherOrientation(page.widthIn, page.heightIn, rule.trimWidth, rule.trimHeight, rule.tolerance);
+  const orientation = bleedMatch.portraitMatch || trimMatch.portraitMatch
+    ? 'portrait'
+    : bleedMatch.landscapeMatch || trimMatch.landscapeMatch
+      ? 'landscape'
+      : 'unknown';
+
+  return {
+    ...page,
+    ...bleedMatch,
+    bleedPortraitMatch: bleedMatch.portraitMatch,
+    bleedLandscapeMatch: bleedMatch.landscapeMatch,
+    bleedMatches: bleedMatch.matches,
+    trimPortraitMatch: trimMatch.portraitMatch,
+    trimLandscapeMatch: trimMatch.landscapeMatch,
+    trimMatches: trimMatch.matches,
+    matches: bleedMatch.matches,
+    sizeMatches: bleedMatch.matches || trimMatch.matches,
+    orientation,
+    missingBleed: trimMatch.matches && !bleedMatch.matches,
+  };
+}
+
 async function getPageDimensions(buffer) {
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
   const doc = await loadingTask.promise;
@@ -2694,7 +2719,7 @@ function getProofExportDir(filePath) {
   return path.join(uploadsDir, '.proofs', path.basename(filePath, path.extname(filePath)));
 }
 
-function buildLowResolutionOverlayHtml(images, pageCheck, sheetW, sheetH, options = {}) {
+function buildLowResolutionOverlayHtml(images, pageCheck, targetW, targetH, options = {}) {
   if (!Array.isArray(images) || !images.length || !pageCheck) return '';
 
   const offsetLeft = Number(options.offsetLeft || 0);
@@ -2704,10 +2729,10 @@ function buildLowResolutionOverlayHtml(images, pageCheck, sheetW, sheetH, option
   const layerClass = options.printView ? 'proof-lowres-layer proof-lowres-layer--print' : 'proof-lowres-layer';
 
   const boxes = images.map((image, index) => {
-    const left = (Number(image.leftIn || 0) / pageWidthIn) * sheetW + offsetLeft;
-    const top = (Number(image.topIn || 0) / pageHeightIn) * sheetH + offsetTop;
-    const width = Math.max((Number(image.widthIn || 0) / pageWidthIn) * sheetW, 10);
-    const height = Math.max((Number(image.heightIn || 0) / pageHeightIn) * sheetH, 10);
+    const left = (Number(image.leftIn || 0) / pageWidthIn) * targetW + offsetLeft;
+    const top = (Number(image.topIn || 0) / pageHeightIn) * targetH + offsetTop;
+    const width = Math.max((Number(image.widthIn || 0) / pageWidthIn) * targetW, 10);
+    const height = Math.max((Number(image.heightIn || 0) / pageHeightIn) * targetH, 10);
     const label = `${image.effectiveDpi} DPI`;
     return `<div class="proof-lowres-box" style="left:${left.toFixed(2)}px;top:${top.toFixed(2)}px;width:${width.toFixed(2)}px;height:${height.toFixed(2)}px;" data-lowres-box title="Low-resolution image ${index + 1}: ${escapeHtml(label)}"><span>${escapeHtml(label)}</span></div>`;
   }).join('');
@@ -2862,7 +2887,7 @@ function buildProofExportLayout(rule, pageCheck, sourceWidth, sourceHeight) {
     };
   }
 
-  const useLandscape = Boolean(pageCheck && pageCheck.landscapeMatch);
+  const useLandscape = pageCheck?.orientation === 'landscape';
   const bleedW = useLandscape ? rule.bleedHeight : rule.bleedWidth;
   const bleedH = useLandscape ? rule.bleedWidth : rule.bleedHeight;
   const trimW = useLandscape ? rule.trimHeight : rule.trimWidth;
@@ -2915,18 +2940,23 @@ async function generateProofExports(filePath, jobRecord = null) {
     const sheetCtx = sheetCanvas.getContext('2d');
     await page.render({ canvasContext: sheetCtx, viewport }).promise;
 
+    const placedWidth = width;
+    const placedHeight = height;
+    const placedLeft = layout.sheetX + ((layout.sheetWidth - placedWidth) / 2);
+    const placedTop = layout.sheetY + ((layout.sheetHeight - placedHeight) / 2);
+
     const pngCanvas = createCanvas(layout.canvasWidth, layout.canvasHeight);
     const pngCtx = pngCanvas.getContext('2d');
     pngCtx.fillStyle = '#ffffff';
     pngCtx.fillRect(0, 0, layout.canvasWidth, layout.canvasHeight);
-    pngCtx.drawImage(sheetCanvas, layout.sheetX, layout.sheetY, layout.sheetWidth, layout.sheetHeight);
+    pngCtx.drawImage(sheetCanvas, placedLeft, placedTop, placedWidth, placedHeight);
     drawProofCropMarks(pngCtx, layout);
     applyProofWatermark(pngCtx, layout.canvasWidth, layout.canvasHeight);
 
     const pdfCtx = pdfDoc.beginPage(layout.canvasWidth, layout.canvasHeight);
     pdfCtx.fillStyle = '#ffffff';
     pdfCtx.fillRect(0, 0, layout.canvasWidth, layout.canvasHeight);
-    pdfCtx.drawImage(sheetCanvas, layout.sheetX, layout.sheetY, layout.sheetWidth, layout.sheetHeight);
+    pdfCtx.drawImage(sheetCanvas, placedLeft, placedTop, placedWidth, placedHeight);
     drawProofCropMarks(pdfCtx, layout);
     applyProofWatermark(pdfCtx, layout.canvasWidth, layout.canvasHeight);
     pdfDoc.endPage();
@@ -2956,14 +2986,20 @@ async function generateProofExports(filePath, jobRecord = null) {
 }
 
 function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender, lowResolutionImages = []) {
-  const useLandscape = Boolean(pageCheck && pageCheck.landscapeMatch);
+  const useLandscape = pageCheck?.orientation === 'landscape';
   const bleedW = useLandscape ? rule.bleedHeight : rule.bleedWidth;
   const bleedH = useLandscape ? rule.bleedWidth : rule.bleedHeight;
   const trimW = useLandscape ? rule.trimHeight : rule.trimWidth;
   const trimH = useLandscape ? rule.trimWidth : rule.trimHeight;
+  const pageW = Number(pageCheck?.widthIn) || bleedW;
+  const pageH = Number(pageCheck?.heightIn) || bleedH;
   const scale = 67.5;
   const sheetW = bleedW * scale;
   const sheetH = bleedH * scale;
+  const placedPageW = pageW * scale;
+  const placedPageH = pageH * scale;
+  const placedPageLeft = (sheetW - placedPageW) / 2;
+  const placedPageTop = (sheetH - placedPageH) / 2;
   const trimLeft = ((bleedW - trimW) / 2) * scale;
   const trimTop = ((bleedH - trimH) / 2) * scale;
   const trimWidth = trimW * scale;
@@ -2974,11 +3010,14 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
   const innerTrimWidth = trimWidth - (bleedInset * 2);
   const innerTrimHeight = trimHeight - (bleedInset * 2);
   const mark = 18;
-  const lowResSheetOverlay = buildLowResolutionOverlayHtml(lowResolutionImages, pageCheck, sheetW, sheetH);
-  const lowResPrintOverlay = buildLowResolutionOverlayHtml(lowResolutionImages, pageCheck, sheetW, sheetH, {
+  const lowResSheetOverlay = buildLowResolutionOverlayHtml(lowResolutionImages, pageCheck, placedPageW, placedPageH, {
+    offsetLeft: placedPageLeft,
+    offsetTop: placedPageTop,
+  });
+  const lowResPrintOverlay = buildLowResolutionOverlayHtml(lowResolutionImages, pageCheck, placedPageW, placedPageH, {
     printView: true,
-    offsetLeft: -trimLeft,
-    offsetTop: -trimTop,
+    offsetLeft: placedPageLeft - trimLeft,
+    offsetTop: placedPageTop - trimTop,
   });
   const backFace = backRender
     ? `<img src="${backRender.url}" alt="Back side proof page ${backRender.pageNum}"><span class="proof-face-label">BACK</span>`
@@ -2996,8 +3035,8 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
         <div class="proof-tech-label bottom-left">BLEED ${formatDimension(rule.bleedInset)} IN / LIVE PREVIEW</div>
         <div class="proof-tech-radar"></div>
       </div>
-      <div class="proof-sheet proof-sheet-view" style="width:${sheetW}px;height:${sheetH}px;" data-magnify-target data-magnifier-id="${label}" data-magnify-src="${render.url}" data-img-width="${sheetW}" data-img-height="${sheetH}" data-img-left="0" data-img-top="0" data-zoom="2.6">
-        <img class="proof-image" src="${render.url}" alt="Proof page ${render.pageNum}">
+      <div class="proof-sheet proof-sheet-view" style="width:${sheetW}px;height:${sheetH}px;" data-magnify-target data-magnifier-id="${label}" data-magnify-src="${render.url}" data-img-width="${placedPageW}" data-img-height="${placedPageH}" data-img-left="${placedPageLeft}" data-img-top="${placedPageTop}" data-zoom="2.6">
+        <img class="proof-image" src="${render.url}" alt="Proof page ${render.pageNum}" style="left:${placedPageLeft}px;top:${placedPageTop}px;width:${placedPageW}px;height:${placedPageH}px;">
         ${lowResSheetOverlay}
         <div class="proof-bleed-band" style="left:0;top:0;width:${sheetW}px;height:${bleedInset}px;"></div>
         <div class="proof-bleed-band" style="left:0;top:${sheetH - bleedInset}px;width:${sheetW}px;height:${bleedInset}px;"></div>
@@ -3016,8 +3055,8 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
         <div class="crop-mark v" style="left:${trimLeft + trimWidth}px;top:${trimTop - mark}px;height:${mark}px;"></div>
         <div class="crop-mark v" style="left:${trimLeft + trimWidth}px;top:${trimTop + trimHeight}px;height:${mark}px;"></div>
       </div>
-      <div class="proof-print-piece proof-print-view" style="width:${trimWidth}px;height:${trimHeight}px;" data-magnify-target data-magnifier-id="${label}" data-magnify-src="${render.url}" data-img-width="${sheetW}" data-img-height="${sheetH}" data-img-left="-${trimLeft}" data-img-top="-${trimTop}" data-zoom="2.6">
-        <img class="proof-print-image" src="${render.url}" alt="Trimmed proof page ${render.pageNum}" style="left:-${trimLeft}px;top:-${trimTop}px;width:${sheetW}px;height:${sheetH}px;">
+      <div class="proof-print-piece proof-print-view" style="width:${trimWidth}px;height:${trimHeight}px;" data-magnify-target data-magnifier-id="${label}" data-magnify-src="${render.url}" data-img-width="${placedPageW}" data-img-height="${placedPageH}" data-img-left="${placedPageLeft - trimLeft}" data-img-top="${placedPageTop - trimTop}" data-zoom="2.6">
+        <img class="proof-print-image" src="${render.url}" alt="Trimmed proof page ${render.pageNum}" style="left:${placedPageLeft - trimLeft}px;top:${placedPageTop - trimTop}px;width:${placedPageW}px;height:${placedPageH}px;">
         ${lowResPrintOverlay}
       </div>
       <div class="proof-magnifier" data-proof-magnifier data-proof-magnifier-id="${label}"></div>
@@ -3433,20 +3472,25 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       overall = 'warning';
     }
 
-    const pageChecks = pageDimensions.map((page) => ({
-      ...page,
-      ...matchesEitherOrientation(page.widthIn, page.heightIn, activeRule.bleedWidth, activeRule.bleedHeight, activeRule.tolerance),
-    }));
+    const pageChecks = pageDimensions.map((page) => analyzePageAgainstRule(page, activeRule));
 
-    const wrongSizePages = pageChecks.filter((page) => !page.matches);
+    const wrongSizePages = pageChecks.filter((page) => !page.sizeMatches);
+    const missingBleedPages = pageChecks.filter((page) => page.missingBleed);
 
     if (wrongSizePages.length > 0) {
       findings.push({
         severity: 'fail',
         message: 'Wrong page dimensions for this product',
-        detail: `Expected ${formatDimension(activeRule.bleedWidth)} x ${formatDimension(activeRule.bleedHeight)} inches with bleed in either portrait or landscape for ${activeRule.categoryLabel} (${activeRule.sizeLabel}). Detected ${wrongSizePages.map((page) => `page ${page.pageNum}: ${page.widthIn} x ${page.heightIn}`).join('; ')}.`,
+        detail: `Expected either the bleed size (${formatDimension(activeRule.bleedWidth)} x ${formatDimension(activeRule.bleedHeight)} in) or the trim size (${formatDimension(activeRule.trimWidth)} x ${formatDimension(activeRule.trimHeight)} in) in portrait or landscape for ${activeRule.categoryLabel} (${activeRule.sizeLabel}). Detected ${wrongSizePages.map((page) => `page ${page.pageNum}: ${page.widthIn} x ${page.heightIn}`).join('; ')}.`,
       });
       overall = 'fail';
+    } else if (missingBleedPages.length > 0) {
+      findings.push({
+        severity: 'warning',
+        message: 'Page size matches trim but bleed is missing',
+        detail: `Detected ${missingBleedPages.map((page) => `page ${page.pageNum}: ${page.widthIn} x ${page.heightIn}`).join('; ')}. The proof will keep the correct orientation, but the file is built to trim size instead of the full bleed size of ${formatDimension(activeRule.bleedWidth)} x ${formatDimension(activeRule.bleedHeight)} inches.`,
+      });
+      if (overall !== 'fail') overall = 'warning';
     } else {
       findings.push({
         severity: 'pass',
@@ -3455,7 +3499,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       });
     }
 
-    const orientationKinds = pageChecks.map((page) => (page.portraitMatch ? 'portrait' : page.landscapeMatch ? 'landscape' : 'unknown'));
+    const orientationKinds = pageChecks.map((page) => page.orientation);
     const mixedOrientation = new Set(orientationKinds.filter((kind) => kind !== 'unknown')).size > 1;
 
     if (mixedOrientation && overall !== 'fail') {
@@ -3645,7 +3689,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
             <h2>Detected document size</h2>
             <p class="muted">Expecting ${activeRule.expectedPageMessage} at ${formatDimension(activeRule.bleedWidth)} × ${formatDimension(activeRule.bleedHeight)} in with bleed.</p>
             <div class="stack">
-              ${pageChecks.map((page) => `<div class="finding"><h3>Page ${page.pageNum}</h3><p class="muted">${page.widthIn} x ${page.heightIn} inches · ${page.portraitMatch ? 'portrait' : page.landscapeMatch ? 'landscape' : 'unknown orientation'}</p></div>`).join('')}
+              ${pageChecks.map((page) => `<div class="finding"><h3>Page ${page.pageNum}</h3><p class="muted">${page.widthIn} x ${page.heightIn} inches · ${page.orientation === 'unknown' ? 'unknown orientation' : page.orientation}${page.missingBleed ? ' · trim size only / bleed missing' : ''}</p></div>`).join('')}
             </div>
           </div>
           <div class="card">
