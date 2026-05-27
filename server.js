@@ -45,6 +45,13 @@ const DEFAULT_BLEED_INCHES = 0.125;
 const DEFAULT_PAGE_COUNT_MESSAGE = '1 page unless supplied as a set';
 const TWO_SIDED_CATEGORY_KEYS = new Set(['postcards', 'brochures', 'business-cards']);
 const DEFAULT_MIN_ACCEPTABLE_IMAGE_DPI = 300;
+const BANNER_MIN_ACCEPTABLE_IMAGE_DPI = 150;
+const BANNER_CUSTOM_SIZE_LIMITS = {
+  widthFeet: { min: 1, max: 100, step: 1 },
+  heightFeet: { min: 1, max: 10, step: 1 },
+  width: { min: 12, max: 1200 },
+  height: { min: 12, max: 120 },
+};
 const MIN_IMAGE_DISPLAY_INCHES = 0.25;
 
 const PRODUCT_CATEGORIES = {
@@ -120,6 +127,20 @@ const PRODUCT_CATEGORIES = {
       { value: '8.5x11', label: 'Letter NCR · 8.5 × 11 in' },
       { value: '8.5x14', label: 'Legal NCR · 8.5 × 14 in' },
     ],
+  },
+  banners: {
+    label: 'Banners',
+    helper: 'Smart Levels banner specs: solid vinyl (13oz or 15oz, matte or gloss), mesh vinyl (8oz matte), or fabric (9oz wrinkle-free polyester). Choose the final banner width and height like Smart Levels style variable sizing.',
+    sizeMode: 'custom',
+    customSize: {
+      widthMin: BANNER_CUSTOM_SIZE_LIMITS.widthFeet.min,
+      widthMax: BANNER_CUSTOM_SIZE_LIMITS.widthFeet.max,
+      heightMin: BANNER_CUSTOM_SIZE_LIMITS.heightFeet.min,
+      heightMax: BANNER_CUSTOM_SIZE_LIMITS.heightFeet.max,
+      step: BANNER_CUSTOM_SIZE_LIMITS.widthFeet.step,
+      unit: 'ft',
+    },
+    sizes: [],
   },
 };
 
@@ -2174,6 +2195,20 @@ function renderPage(content, options = {}) {
         background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
       }
       .selection-grid { display:grid; gap:16px; grid-template-columns: 1fr 1fr; }
+      .custom-size-shell {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.08);
+        background: rgba(255,255,255,.04);
+      }
+      .custom-size-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .custom-size-grid input { width: 100%; }
+      .custom-size-helper { margin: 10px 0 0; }
       .helper-card {
         margin-top: 16px;
         padding: 16px 18px;
@@ -2264,6 +2299,10 @@ function renderPage(content, options = {}) {
     const specPages = document.querySelector('[data-spec-pages]');
     const specResolution = document.querySelector('[data-spec-resolution]');
     const specNote = document.querySelector('[data-spec-note]');
+    const customSizeShell = document.querySelector('[data-custom-size-shell]');
+    const customSizeWidth = document.querySelector('[data-custom-width]');
+    const customSizeHeight = document.querySelector('[data-custom-height]');
+    const customSizeHelper = document.querySelector('[data-custom-size-helper]');
 
     function syncThemeUi(theme) {
       if (!themeLabel || !themeIcon) return;
@@ -2295,8 +2334,9 @@ function renderPage(content, options = {}) {
     function buildSpecData(categoryKey, sizeValue) {
       const dims = parseSizeValue(sizeValue);
       if (!dims) return null;
-      const bleedWidth = dims.width + 0.25;
-      const bleedHeight = dims.height + 0.25;
+      const isBanner = categoryKey === 'banners';
+      const bleedWidth = dims.width + (isBanner ? 0 : 0.25);
+      const bleedHeight = dims.height + (isBanner ? 0 : 0.25);
       const twoSidedCategories = new Set(['postcards', 'brochures', 'business-cards']);
       const expectedPages = twoSidedCategories.has(categoryKey) ? '2 pages / 2 sides' : '1 page unless supplied as a set';
       const categoryNotes = {
@@ -2306,14 +2346,34 @@ function renderPage(content, options = {}) {
         booklets: 'Booklet interiors and covers may arrive as separate PDFs, but finished trim and bleed still need to match.',
         notepads: 'Notepad files should be built at finished pad size with bleed if art touches the edge.',
         'ncr-forms': 'NCR forms should preserve clean margins for numbering, perf marks, and writing areas.',
+        banners: 'Build banner files at final size. Smart Levels calls for 150 DPI at full size or vector art, and important text should stay clear of edges when grommets are requested.',
       };
       return {
         trim: formatDimension(dims.width) + ' × ' + formatDimension(dims.height) + ' in',
         bleed: formatDimension(bleedWidth) + ' × ' + formatDimension(bleedHeight) + ' in',
         pages: expectedPages,
-        resolution: '300 DPI minimum for placed raster artwork',
+        resolution: isBanner ? '150 DPI minimum at full size, or vector artwork' : '300 DPI minimum for placed raster artwork',
         note: categoryNotes[categoryKey] || 'Build the PDF at final trim size plus 0.125 inch bleed on each side.',
       };
+    }
+
+    function syncCustomSizeValue() {
+      if (!sizeSelect || !customSizeWidth || !customSizeHeight) return;
+      const widthFeet = Number(customSizeWidth.value);
+      const heightFeet = Number(customSizeHeight.value);
+      if (!Number.isFinite(widthFeet) || !Number.isFinite(heightFeet) || widthFeet <= 0 || heightFeet <= 0) {
+        sizeSelect.innerHTML = '<option value="" selected>Enter banner width and height</option>';
+        sizeSelect.value = '';
+        updateSpecPanel('banners', '');
+        return;
+      }
+      const widthInches = widthFeet * 12;
+      const heightInches = heightFeet * 12;
+      const value = String(widthInches) + 'x' + String(heightInches);
+      const optionLabel = formatDimension(widthFeet) + ' × ' + formatDimension(heightFeet) + ' ft';
+      sizeSelect.innerHTML = '<option value="' + value + '" selected>' + optionLabel + '</option>';
+      sizeSelect.value = value;
+      updateSpecPanel('banners', value);
     }
 
     function clearSelectionUi() {
@@ -2322,9 +2382,14 @@ function renderPage(content, options = {}) {
         sizeSelect.innerHTML = '<option value="" selected>Choose a category first</option>';
         sizeSelect.disabled = true;
         sizeSelect.value = '';
+        sizeSelect.hidden = false;
       }
+      if (customSizeShell) customSizeShell.hidden = true;
+      if (customSizeWidth) customSizeWidth.value = '';
+      if (customSizeHeight) customSizeHeight.value = '';
       if (helperHeading) helperHeading.textContent = 'Choose a category to begin';
       if (helperText) helperText.textContent = 'Product specs will appear after you choose a category and finished size.';
+      if (customSizeHelper) customSizeHelper.textContent = 'Choose width and height in feet. Width can be 1–100 ft, height can be 1–10 ft.';
       if (specPanel) specPanel.classList.remove('is-visible');
     }
 
@@ -2350,14 +2415,37 @@ function renderPage(content, options = {}) {
         return;
       }
       const selectedCategory = productCategories[categoryKey];
+      const isCustomSize = selectedCategory.sizeMode === 'custom';
       sizeSelect.disabled = false;
-      sizeSelect.innerHTML = '<option value="" selected>Choose a size</option>';
-      selectedCategory.sizes.forEach((size) => {
-        const option = document.createElement('option');
-        option.value = size.value;
-        option.textContent = size.label;
-        sizeSelect.appendChild(option);
-      });
+      sizeSelect.hidden = isCustomSize;
+      if (customSizeShell) customSizeShell.hidden = !isCustomSize;
+
+      if (isCustomSize) {
+        sizeSelect.innerHTML = '<option value="" selected>Enter banner width and height</option>';
+        sizeSelect.value = '';
+        if (customSizeWidth) {
+          customSizeWidth.min = String(selectedCategory.customSize.widthMin);
+          customSizeWidth.max = String(selectedCategory.customSize.widthMax);
+          customSizeWidth.step = String(selectedCategory.customSize.step || 1);
+        }
+        if (customSizeHeight) {
+          customSizeHeight.min = String(selectedCategory.customSize.heightMin);
+          customSizeHeight.max = String(selectedCategory.customSize.heightMax);
+          customSizeHeight.step = String(selectedCategory.customSize.step || 1);
+        }
+        if (customSizeHelper) {
+          customSizeHelper.textContent = 'Choose width and height in feet. Width can be ' + selectedCategory.customSize.widthMin + '–' + selectedCategory.customSize.widthMax + ' ft, height can be ' + selectedCategory.customSize.heightMin + '–' + selectedCategory.customSize.heightMax + ' ft.';
+        }
+      } else {
+        sizeSelect.innerHTML = '<option value="" selected>Choose a size</option>';
+        selectedCategory.sizes.forEach((size) => {
+          const option = document.createElement('option');
+          option.value = size.value;
+          option.textContent = size.label;
+          sizeSelect.appendChild(option);
+        });
+      }
+
       if (helperHeading) helperHeading.textContent = selectedCategory.label + ' size guidance';
       if (helperText) helperText.textContent = selectedCategory.helper;
       updateSpecPanel(categoryKey, '');
@@ -2366,6 +2454,8 @@ function renderPage(content, options = {}) {
     if (categorySelect && sizeSelect) {
       categorySelect.addEventListener('change', (event) => updateSizeOptions(event.target.value));
       sizeSelect.addEventListener('change', (event) => updateSpecPanel(categorySelect.value, event.target.value));
+      if (customSizeWidth) customSizeWidth.addEventListener('input', syncCustomSizeValue);
+      if (customSizeHeight) customSizeHeight.addEventListener('input', syncCustomSizeValue);
       clearSelectionUi();
     }
 
@@ -2647,12 +2737,14 @@ function buildProductRule(categoryKey, sizeValue) {
   const parsed = parseSizeValue(sizeValue);
   if (!parsed) return null;
 
+  const isBanner = categoryKey === 'banners';
   const requiresTwoSided = categoryKey === LEGAL_POSTCARD_RULE.categoryKey && sizeValue === LEGAL_POSTCARD_RULE.sizeValue
     ? LEGAL_POSTCARD_RULE.requiresTwoSided
     : TWO_SIDED_CATEGORY_KEYS.has(categoryKey);
   const expectedPages = requiresTwoSided ? 2 : 1;
-  const bleedWidth = parsed.width + (DEFAULT_BLEED_INCHES * 2);
-  const bleedHeight = parsed.height + (DEFAULT_BLEED_INCHES * 2);
+  const bleedInset = isBanner ? 0 : DEFAULT_BLEED_INCHES;
+  const bleedWidth = parsed.width + (bleedInset * 2);
+  const bleedHeight = parsed.height + (bleedInset * 2);
 
   return {
     name: `${getCategoryLabel(categoryKey)} · ${formatSizeLabel(sizeValue)}`,
@@ -2664,15 +2756,17 @@ function buildProductRule(categoryKey, sizeValue) {
     trimHeight: parsed.height,
     bleedWidth,
     bleedHeight,
-    bleedInset: DEFAULT_BLEED_INCHES,
+    bleedInset,
     expectedPages,
     expectedPageMessage: requiresTwoSided ? '2 pages / 2 sides' : DEFAULT_PAGE_COUNT_MESSAGE,
     requiresTwoSided,
     tolerance: LEGAL_POSTCARD_RULE.tolerance,
-    minImageDpi: DEFAULT_MIN_ACCEPTABLE_IMAGE_DPI,
-    helperNote: requiresTwoSided
-      ? 'Provide one page per printed side unless the job is intentionally split across separate files.'
-      : 'Provide a single page at final size unless this job is intentionally supplied as a multi-file set.',
+    minImageDpi: isBanner ? BANNER_MIN_ACCEPTABLE_IMAGE_DPI : DEFAULT_MIN_ACCEPTABLE_IMAGE_DPI,
+    helperNote: isBanner
+      ? 'Build banner artwork at final size. Keep important text and graphics away from the edges if grommets are requested.'
+      : requiresTwoSided
+        ? 'Provide one page per printed side unless the job is intentionally split across separate files.'
+        : 'Provide a single page at final size unless this job is intentionally supplied as a multi-file set.',
   };
 }
 
@@ -3367,6 +3461,19 @@ app.get('/', (_req, res) => {
                     <select id="productSize" name="productSize" data-size-select required disabled>
                       <option value="" selected>Choose a category first</option>
                     </select>
+                    <div class="custom-size-shell" data-custom-size-shell hidden>
+                      <div class="custom-size-grid">
+                        <div>
+                          <label for="bannerWidth">Width</label>
+                          <input id="bannerWidth" type="number" inputmode="decimal" placeholder="Width (ft)" data-custom-width>
+                        </div>
+                        <div>
+                          <label for="bannerHeight">Height</label>
+                          <input id="bannerHeight" type="number" inputmode="decimal" placeholder="Height (ft)" data-custom-height>
+                        </div>
+                      </div>
+                      <p class="muted custom-size-helper" data-custom-size-helper>Choose width and height in feet. Width can be 1–100 ft, height can be 1–10 ft.</p>
+                    </div>
                   </div>
                 </div>
                 <div class="helper-card">
@@ -3394,7 +3501,7 @@ app.get('/', (_req, res) => {
         <ul class="spec-list">
           <li>The homepage no longer assumes the legal postcard product by default.</li>
           <li>Specs now appear after category and size are chosen, so the upload flow stays focused.</li>
-          <li>The current backend proofing rule can still enforce the existing legal postcard inspection until broader product logic is added.</li>
+          <li>Banners now use large-format guidance with a 150 DPI minimum instead of the standard 300 DPI print rule.</li>
         </ul>
       </div>
       <div class="card">
@@ -3578,6 +3685,22 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
     const selectedCategoryKey = req.body.productCategory || DEFAULT_CATEGORY_KEY;
     const fallbackSizeValue = PRODUCT_CATEGORIES[selectedCategoryKey]?.sizes?.[0]?.value || LEGAL_POSTCARD_RULE.sizeValue;
     const selectedSizeValue = req.body.productSize || fallbackSizeValue;
+
+    if (selectedCategoryKey === 'banners') {
+      const parsedBannerSize = parseSizeValue(selectedSizeValue);
+      if (!parsedBannerSize) {
+        throw new Error('Please enter a valid banner width and height before uploading.');
+      }
+      if (
+        parsedBannerSize.width < BANNER_CUSTOM_SIZE_LIMITS.width.min
+        || parsedBannerSize.width > BANNER_CUSTOM_SIZE_LIMITS.width.max
+        || parsedBannerSize.height < BANNER_CUSTOM_SIZE_LIMITS.height.min
+        || parsedBannerSize.height > BANNER_CUSTOM_SIZE_LIMITS.height.max
+      ) {
+        throw new Error(`Banner size must be between ${BANNER_CUSTOM_SIZE_LIMITS.width.min} and ${BANNER_CUSTOM_SIZE_LIMITS.width.max} inches wide, and between ${BANNER_CUSTOM_SIZE_LIMITS.height.min} and ${BANNER_CUSTOM_SIZE_LIMITS.height.max} inches high.`);
+      }
+    }
+
     const activeRule = buildProductRule(selectedCategoryKey, selectedSizeValue);
 
     if (!activeRule) {
