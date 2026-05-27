@@ -685,9 +685,7 @@ function renderPage(content, options = {}) {
         content: "";
         position: absolute;
         inset: 0;
-        background:
-          linear-gradient(135deg, rgba(255,255,255,.05), transparent 32%),
-          linear-gradient(90deg, transparent 0 82%, rgba(255,255,255,.025) 82% 83%, transparent 83% 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,.05), transparent 32%);
         pointer-events: none;
         z-index: -1;
       }
