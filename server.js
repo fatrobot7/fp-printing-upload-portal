@@ -959,9 +959,8 @@ function renderPage(content, options = {}) {
       }
       .upload-panel-head {
         display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: stretch;
         gap: 18px;
         margin-bottom: 18px;
       }
@@ -970,15 +969,30 @@ function renderPage(content, options = {}) {
         margin-bottom: 8px;
       }
       .upload-panel-badge {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 84px;
         padding: 16px 18px;
         border-radius: 20px;
-        min-width: 240px;
         border: 1px solid rgba(255,255,255,.08);
         background: rgba(6, 12, 24, 0.62);
       }
       .upload-panel-badge strong {
         display: block;
         margin-bottom: 6px;
+      }
+      .upload-panel-badge .staff-action-link {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .upload-panel-badge .staff-action-link:hover {
+        border-color: transparent;
+        background: transparent;
+        color: var(--link);
       }
       .hero-stats, .highlight-grid, .info-grid, .proof-meta { display:grid; gap:12px; }
       .hero-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 24px; }
@@ -1083,6 +1097,12 @@ function renderPage(content, options = {}) {
         border-color: rgba(15,23,42,.10);
         color: #111827;
         background: rgba(255,255,255,.64);
+        box-shadow: none;
+      }
+      html[data-theme="light"] .file-upload-icon {
+        border: 1px solid rgba(15,23,42,.10);
+        color: #111827;
+        background: rgba(255,255,255,.48);
         box-shadow: none;
       }
       html[data-theme="light"] .upload-panel-badge {
