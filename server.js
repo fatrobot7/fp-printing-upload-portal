@@ -970,11 +970,11 @@ function renderPage(content, options = {}) {
         margin-bottom: 8px;
       }
       .upload-panel-badge {
-        padding: 14px 16px;
-        border-radius: 22px;
+        padding: 16px 18px;
+        border-radius: 20px;
         min-width: 240px;
-        border: 1px solid rgba(220,38,38,.18);
-        background: linear-gradient(180deg, rgba(220,38,38,.12), rgba(220,38,38,.04));
+        border: 1px solid rgba(255,255,255,.08);
+        background: rgba(6, 12, 24, 0.62);
       }
       .upload-panel-badge strong {
         display: block;
@@ -1012,12 +1012,12 @@ function renderPage(content, options = {}) {
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         gap: 14px;
-        min-height: 86px;
-        padding: 14px 16px;
+        min-height: 84px;
+        padding: 16px 18px;
         overflow: hidden;
-        border: 1px solid rgba(220,38,38,.18);
-        border-radius: 22px;
-        background: linear-gradient(180deg, rgba(220,38,38,.12), rgba(220,38,38,.04));
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 20px;
+        background: rgba(6, 12, 24, 0.62);
         box-shadow: none;
         cursor: pointer;
         transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
@@ -1048,12 +1048,12 @@ function renderPage(content, options = {}) {
         font-weight: 900;
       }
       .file-upload-copy { display: grid; gap: 5px; min-width: 0; }
-      .file-upload-title { color: var(--ink); font-size: 15px; font-weight: 900; }
+      .file-upload-title { color: var(--ink); font-size: 16px; font-weight: 700; }
       .file-upload-name {
         overflow: hidden;
         color: var(--muted);
-        font-size: 13px;
-        font-weight: 600;
+        font-size: 16px;
+        font-weight: 400;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -1085,6 +1085,12 @@ function renderPage(content, options = {}) {
         background: rgba(255,255,255,.64);
         box-shadow: none;
       }
+      html[data-theme="light"] .upload-panel-badge {
+        border-color: rgba(15,23,42,.14);
+        background: linear-gradient(180deg, #f0eeee, #e6e3e3);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+      }
+      html[data-theme="light"] .upload-panel-badge strong { color: #111827; }
       textarea { min-height: 100px; resize: vertical; }
       .btn {
         border: 0; border-radius: 999px; padding: 15px 24px;
