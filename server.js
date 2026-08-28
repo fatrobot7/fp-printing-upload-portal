@@ -2280,6 +2280,26 @@ function renderPage(content, options = {}) {
         background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.025));
       }
       .selection-grid { display:grid; gap:16px; grid-template-columns: 1fr 1fr; }
+      .selection-shell .selection-grid select {
+        min-height: 84px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border-color: rgba(255,255,255,.08);
+        background-color: rgba(6, 12, 24, 0.62);
+        font-size: 16px;
+        font-weight: 700;
+      }
+      html[data-theme="light"] .selection-shell .selection-grid select {
+        border-color: rgba(15,23,42,.14);
+        background-color: #e8e5e5;
+        background-image: linear-gradient(180deg, #f0eeee, #e6e3e3);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+        color: #111827;
+      }
+      html[data-theme="light"] .selection-shell .selection-grid select:disabled {
+        color: #64748b;
+        opacity: 1;
+      }
       .custom-size-shell {
         margin-top: 12px;
         padding: 14px;
