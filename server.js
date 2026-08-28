@@ -3739,7 +3739,15 @@ app.get('/jobs/:jobId', (req, res) => {
 });
 
 app.get('/staff', (_req, res) => {
-  const jobs = listJobRecords();
+  const allRecords = listJobRecords();
+  const latestByRoot = new Map();
+  allRecords.forEach((job) => {
+    const rootJobId = job.rootJobId || job.jobId;
+    const current = latestByRoot.get(rootJobId);
+    if (!current || (job.revisionNumber || 1) > (current.revisionNumber || 1)) latestByRoot.set(rootJobId, job);
+  });
+  const jobs = [...latestByRoot.values()]
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
   const counts = jobs.reduce((acc, job) => {
     acc.total += 1;
     acc[job.status] = (acc[job.status] || 0) + 1;
@@ -3747,6 +3755,7 @@ app.get('/staff', (_req, res) => {
     if (job.proofExports?.pdf) acc.proofs += 1;
     return acc;
   }, { total: 0, pass: 0, warning: 0, fail: 0, confirmed: 0, proofs: 0 });
+  counts.versions = allRecords.length;
 
   res.send(renderPage(`
     <div class="staff-shell">
@@ -3761,7 +3770,7 @@ app.get('/staff', (_req, res) => {
         <div class="card">
           <p class="section-kicker">Queue snapshot</p>
           <div class="staff-summary">
-            <div class="stat"><div class="stat-value">${counts.total}</div><div class="muted">jobs saved</div></div>
+            <div class="stat"><div class="stat-value">${counts.total}</div><div class="muted">active jobs · ${counts.versions} preserved version${counts.versions === 1 ? '' : 's'}</div></div>
             <div class="stat"><div class="stat-value">${counts.fail}</div><div class="muted">need intervention</div></div>
             <div class="stat"><div class="stat-value">${counts.proofs}</div><div class="muted">proof exports made</div></div>
             <div class="stat"><div class="stat-value">${counts.confirmed}</div><div class="muted">orientation confirmed</div></div>
@@ -3793,7 +3802,7 @@ app.get('/staff', (_req, res) => {
             return `
               <div class="staff-job">
                 <div class="staff-job-main">
-                  <div class="staff-kicker">${job.jobId} · ${job.productCategoryLabel}</div>
+                  <div class="staff-kicker">${job.jobId} · ${job.productCategoryLabel} · revision ${job.revisionNumber || 1}</div>
                   <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     <h2 style="margin-bottom:0;">${job.jobName}</h2>
                     <span class="pill ${badgeClass}">${job.status.toUpperCase()}</span>
