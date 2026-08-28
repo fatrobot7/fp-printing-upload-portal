@@ -623,8 +623,8 @@ function renderPage(content, options = {}) {
         position: relative;
         display: inline-grid;
         place-items: center;
-        width: min(100%, 960px);
-        padding: 4px 0 10px;
+        width: min(100%, 260px);
+        padding: 4px 0 12px;
       }
       .brand-logo {
         position: relative;
@@ -632,7 +632,7 @@ function renderPage(content, options = {}) {
         width: 100%;
         height: auto;
         display: block;
-        max-height: 240px;
+        max-height: 248px;
         object-fit: contain;
         filter: drop-shadow(0 14px 28px rgba(0,0,0,.28));
       }
@@ -2273,16 +2273,16 @@ function renderPage(content, options = {}) {
           justify-content: flex-end;
         }
         .brand-logo-shell {
-          width: min(100%, 520px);
+          width: min(100%, 180px);
           padding: 0 0 6px;
         }
         .brand-logo {
-          max-height: 132px;
+          max-height: 176px;
         }
       }
     </style>
   </head>
-  <body><div class="ambient-ui" aria-hidden="true"><div class="ambient-orb one"></div><div class="ambient-orb two"></div><div class="ambient-orb three"></div><div class="ambient-panel one"></div><div class="ambient-panel two"></div><div class="ambient-line one"></div><div class="ambient-line two"></div><div class="ambient-ring one"></div><div class="ambient-ring two"></div><div class="ambient-crosshair one"></div><div class="ambient-crosshair two"></div><div class="ambient-dots one"></div><div class="ambient-dots two"></div></div><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div><a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/fp-printing-logo-upload.png" alt="FP Printing logo"></span></a></div>${content}${footerLinks}</div>
+  <body><div class="ambient-ui" aria-hidden="true"><div class="ambient-orb one"></div><div class="ambient-orb two"></div><div class="ambient-orb three"></div><div class="ambient-panel one"></div><div class="ambient-panel two"></div><div class="ambient-line one"></div><div class="ambient-line two"></div><div class="ambient-ring one"></div><div class="ambient-ring two"></div><div class="ambient-crosshair one"></div><div class="ambient-crosshair two"></div><div class="ambient-dots one"></div><div class="ambient-dots two"></div></div><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div><a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/stamp-logo-seal.png" alt="STAMP - Standards Testing for Artwork, Mailing and Prepress"></span></a></div>${content}${footerLinks}</div>
   <script>
     const productCategories = ${categoryDataJson};
     const defaultCategoryKey = ${JSON.stringify(defaultCategoryKey)};
