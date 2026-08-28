@@ -186,6 +186,7 @@ app.use(express.urlencoded({ extended: true }));
 function renderPage(content, options = {}) {
   const categoryDataJson = JSON.stringify(PRODUCT_CATEGORIES);
   const defaultCategoryKey = options.defaultCategoryKey || DEFAULT_CATEGORY_KEY;
+  const initialProductSize = options.initialProductSize || '';
 
   const footerLinks = `
     <div class="site-footer">
@@ -2410,6 +2411,7 @@ function renderPage(content, options = {}) {
   <script>
     const productCategories = ${categoryDataJson};
     const defaultCategoryKey = ${JSON.stringify(defaultCategoryKey)};
+    const initialProductSize = ${JSON.stringify(initialProductSize)};
     const themeToggle = document.querySelector('[data-theme-toggle]');
     const themeLabel = document.querySelector('[data-theme-label]');
     const themeIcon = document.querySelector('[data-theme-icon]');
@@ -2591,7 +2593,14 @@ function renderPage(content, options = {}) {
       sizeSelect.addEventListener('change', (event) => updateSpecPanel(categorySelect.value, event.target.value));
       if (customSizeWidth) customSizeWidth.addEventListener('input', syncCustomSizeValue);
       if (customSizeHeight) customSizeHeight.addEventListener('input', syncCustomSizeValue);
-      clearSelectionUi();
+      if (initialProductSize && productCategories[defaultCategoryKey]) {
+        categorySelect.value = defaultCategoryKey;
+        updateSizeOptions(defaultCategoryKey);
+        sizeSelect.value = initialProductSize;
+        updateSpecPanel(defaultCategoryKey, initialProductSize);
+      } else {
+        clearSelectionUi();
+      }
     }
 
     const tabs = document.querySelectorAll('[data-proof-tab]');
@@ -3171,6 +3180,14 @@ function listJobRecords() {
     .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
 }
 
+function listJobRevisions(job) {
+  if (!job) return [];
+  const rootJobId = job.rootJobId || job.jobId;
+  return listJobRecords()
+    .filter((record) => (record.rootJobId || record.jobId) === rootJobId)
+    .sort((a, b) => (a.revisionNumber || 1) - (b.revisionNumber || 1));
+}
+
 async function renderProofImages(filePath) {
   const renderDir = getRenderDir(filePath);
   fs.mkdirSync(renderDir, { recursive: true });
@@ -3483,9 +3500,11 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
     </div>`;
 }
 
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
+  const revisionSource = req.query.revise ? loadJobRecord(req.query.revise) : null;
+  const selectedCategoryKey = revisionSource?.productCategory || DEFAULT_CATEGORY_KEY;
   const categoryOptions = Object.entries(PRODUCT_CATEGORIES)
-    .map(([value, category]) => `<option value="${value}" ${value === DEFAULT_CATEGORY_KEY ? 'selected' : ''}>${category.label}</option>`)
+    .map(([value, category]) => `<option value="${value}" ${value === selectedCategoryKey ? 'selected' : ''}>${category.label}</option>`)
     .join('');
   const defaultCategory = PRODUCT_CATEGORIES[DEFAULT_CATEGORY_KEY];
   const templateCards = POSTCARD_TEMPLATE_FILES.map((template) => `
@@ -3559,7 +3578,8 @@ app.get('/', (_req, res) => {
           </div>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="upload">
+        ${revisionSource ? `<div class="proof-status-note" style="margin-bottom:18px;"><strong>Uploading revision ${(revisionSource.revisionNumber || 1) + 1}</strong><p class="muted" style="margin:8px 0 0;">The current PDF and preflight record for ${escapeHtml(revisionSource.jobName)} will stay preserved.</p></div>` : ''}
         <div class="upload-panel-head">
           <div>
             <p class="section-kicker">Upload artwork</p>
@@ -3576,11 +3596,12 @@ app.get('/', (_req, res) => {
           <div class="upload-hint"><strong>What the proof means</strong><p class="muted">Magenta shading marks the outer 0.125-inch bleed zone. The bright boundary shows the final trimmed piece.</p></div>
         </div>
         <form action="/upload" method="post" enctype="multipart/form-data">
+          ${revisionSource ? `<input type="hidden" name="revisesJobId" value="${escapeHtml(revisionSource.jobId)}">` : ''}
           <div class="grid">
-            <div class="field"><label>Client name</label><input name="clientName" required></div>
-            <div class="field"><label>Email</label><input name="email" type="email" required></div>
-            <div class="field"><label>Job name</label><input name="jobName" required></div>
-            <div class="field"><label>Mail piece type</label><input name="mailPieceType" value="Custom print upload"></div>
+            <div class="field"><label>Client name</label><input name="clientName" value="${escapeHtml(revisionSource?.clientName || '')}" required></div>
+            <div class="field"><label>Email</label><input name="email" type="email" value="${escapeHtml(revisionSource?.email || '')}" required></div>
+            <div class="field"><label>Job name</label><input name="jobName" value="${escapeHtml(revisionSource?.jobName || '')}" required></div>
+            <div class="field"><label>Mail piece type</label><input name="mailPieceType" value="${escapeHtml(revisionSource?.mailPieceType || 'Custom print upload')}"></div>
             <div class="field full">
               <div class="selection-shell">
                 <div class="selection-grid">
@@ -3624,7 +3645,7 @@ app.get('/', (_req, res) => {
                 </div>
               </div>
             </div>
-            <div class="field full"><label>Special instructions</label><textarea name="instructions"></textarea></div>
+            <div class="field full"><label>Special instructions</label><textarea name="instructions">${escapeHtml(revisionSource?.instructions || '')}</textarea></div>
             <div class="field full">
               <label>PDF file</label>
               <label class="file-upload-shell">
@@ -3661,6 +3682,57 @@ app.get('/', (_req, res) => {
         <div class="template-grid">
           ${templateCards}
         </div>
+      </div>
+    </div>
+  `, {
+    defaultCategoryKey: selectedCategoryKey,
+    initialProductSize: revisionSource?.productSize || '',
+  }));
+});
+
+app.get('/jobs/:jobId', (req, res) => {
+  const job = loadJobRecord(req.params.jobId);
+  if (!job) {
+    return res.status(404).send(renderPage(`<div class="card"><h1>Job not found</h1><p class="muted">This STAMP job record does not exist.</p><p><a href="/staff">Back to staff review</a></p></div>`));
+  }
+
+  const revisions = listJobRevisions(job);
+  const currentRevision = job.revisionNumber || 1;
+  res.send(renderPage(`
+    <div class="stack">
+      <div class="card hero-panel">
+        <div class="hero-copy">
+          <a class="eyebrow eyebrow-link" href="/staff">STAMP staff review</a>
+          <h1>${escapeHtml(job.jobName)}</h1>
+          <p class="muted">${escapeHtml(job.clientName)} · ${escapeHtml(job.productCategoryLabel)} · ${escapeHtml(job.productSizeLabel)}</p>
+          <p><span class="pill ${job.status === 'fail' ? 'fail' : job.status === 'warning' ? 'warning' : 'pass'}">${escapeHtml(String(job.status || 'unknown').toUpperCase())}</span></p>
+          <div class="staff-actions">
+            <a class="staff-action-link" href="/?revise=${encodeURIComponent(job.jobId)}#upload">Upload revision ${currentRevision + 1}</a>
+            <a class="staff-action-link" href="/uploads/${encodeURIComponent(job.file.storedName)}" target="_blank" rel="noreferrer">Open this PDF</a>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="section-kicker">Revision history</p>
+        <h2>${revisions.length} preserved version${revisions.length === 1 ? '' : 's'}</h2>
+        <div class="staff-queue" style="margin-top:18px;">
+          ${revisions.map((revision) => `
+            <div class="meta-chip" style="display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;">
+              <div><strong>Revision ${revision.revisionNumber || 1}${revision.jobId === job.jobId ? ' · Viewing' : ''}</strong><br><span class="muted">${escapeHtml(revision.file.originalName)} · ${new Date(revision.createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span></div>
+              <div class="staff-actions"><a class="staff-action-link" href="/jobs/${encodeURIComponent(revision.jobId)}">Details</a><a class="staff-action-link" href="/uploads/${encodeURIComponent(revision.file.storedName)}" target="_blank" rel="noreferrer">PDF</a></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <h2>Current preflight record</h2>
+        <div class="proof-meta">
+          <div class="meta-chip"><strong>Job ID</strong><br><span class="muted">${escapeHtml(job.jobId)}</span></div>
+          <div class="meta-chip"><strong>Revision</strong><br><span class="muted">${currentRevision}</span></div>
+          <div class="meta-chip"><strong>Pages</strong><br><span class="muted">${job.file.pageCount}</span></div>
+          <div class="meta-chip"><strong>Resolution</strong><br><span class="muted">${job.file.lowestDetectedResolutionDpi ? `${job.file.lowestDetectedResolutionDpi} DPI lowest` : 'Manual review'} · ${job.file.minimumResolutionDpi} DPI target</span></div>
+        </div>
+        <div class="stack" style="margin-top:18px;">${(job.findings || []).map((finding) => `<div class="finding"><p><span class="pill ${finding.severity}">${escapeHtml(finding.severity.toUpperCase())}</span></p><h3>${escapeHtml(finding.message)}</h3><p class="muted">${escapeHtml(finding.detail)}</p></div>`).join('')}</div>
       </div>
     </div>
   `));
@@ -3741,6 +3813,8 @@ app.get('/staff', (_req, res) => {
                   <div class="meta-chip"><strong>Proof package</strong><br><span class="muted">${job.proofExports?.pdf ? 'PDF generated' : 'Not exported yet'}</span></div>
                   <div class="meta-chip"><strong>Instructions</strong><br><span class="muted">${job.instructions || 'No special instructions.'}</span></div>
                   <div class="staff-actions">
+                    <a class="staff-action-link" href="/jobs/${encodeURIComponent(job.jobId)}">Job details</a>
+                    <a class="staff-action-link" href="/?revise=${encodeURIComponent(job.jobId)}#upload">Revise file</a>
                     <a class="staff-action-link" href="/uploads/${encodeURIComponent(job.file.storedName)}" target="_blank" rel="noreferrer">Open PDF</a>
                     <a class="staff-action-link" href="${proofHref}">${job.proofExports?.pdf ? 'Open proof PDF' : 'Generate proof'}</a>
                   </div>
@@ -4006,9 +4080,17 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
         ? 'rgba(255, 211, 124, .28)'
         : 'rgba(126, 226, 168, .30)';
 
+    const revisedJob = req.body.revisesJobId ? loadJobRecord(req.body.revisesJobId) : null;
     const jobId = createJobId();
+    const revisionNumber = revisedJob
+      ? Math.max(...listJobRevisions(revisedJob).map((record) => record.revisionNumber || 1), 1) + 1
+      : 1;
+    const rootJobId = revisedJob ? (revisedJob.rootJobId || revisedJob.jobId) : jobId;
     saveJobRecord({
       jobId,
+      rootJobId,
+      parentJobId: revisedJob?.jobId || null,
+      revisionNumber,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: overall,
@@ -4038,6 +4120,13 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       imageResolution,
       proofExports: null,
     });
+    if (revisedJob) {
+      updateJobRecord(revisedJob.jobId, (record) => ({
+        ...record,
+        updatedAt: new Date().toISOString(),
+        supersededByJobId: jobId,
+      }));
+    }
 
     res.send(renderPage(`
       <div class="stack">
@@ -4049,8 +4138,8 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
             <p class="muted">Client: ${req.body.clientName || 'Unknown'} · ${req.body.email || 'No email'} · ${req.body.mailPieceType || 'Unknown type'}</p>
             <p class="muted">Selected product: ${activeRule.categoryLabel} · ${activeRule.sizeLabel}</p>
             <p class="muted">File: <a href="/uploads/${path.basename(req.file.path)}">${req.file.originalname}</a></p>
-            <p class="muted">Job record: ${jobId}</p>
-            <p><a class="staff-action-link" href="/staff">View staff review queue</a></p>
+            <p class="muted">Job record: ${jobId} · Revision ${revisionNumber}</p>
+            <div class="staff-actions"><a class="staff-action-link" href="/jobs/${encodeURIComponent(jobId)}">Open job details</a><a class="staff-action-link" href="/staff">View staff review queue</a></div>
             <div class="hero-stats">
               <div class="stat"><div class="stat-value">${pageCount}</div><div class="muted">page(s) detected</div></div>
               <div class="stat"><div class="stat-value">${sizeMb} MB</div><div class="muted">uploaded PDF size</div></div>
@@ -4156,7 +4245,11 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
   }
 });
 
-app.listen(port, host, () => {
-  console.log(`FP Printing upload portal running on http://${host}:${port}`);
-  console.log(`Using data directory: ${dataRoot}`);
-});
+if (process.env.STAMP_SKIP_LISTEN !== '1') {
+  app.listen(port, host, () => {
+    console.log(`FP Printing upload portal running on http://${host}:${port}`);
+    console.log(`Using data directory: ${dataRoot}`);
+  });
+}
+
+export { app, loadJobRecord, listJobRecords, listJobRevisions, saveJobRecord, updateJobRecord };
