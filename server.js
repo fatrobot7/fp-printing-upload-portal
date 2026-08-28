@@ -1006,25 +1006,84 @@ function renderPage(content, options = {}) {
         outline: none;
       }
       input:focus, select:focus, textarea:focus { border-color: var(--line-strong); box-shadow: 0 0 0 4px rgba(134,168,255,.12); }
-      input[type="file"] {
-        padding: 16px;
-        min-height: 140px;
-        border-style: dashed;
-        border-width: 1.5px;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
-          var(--field-bg);
-      }
-      input[type="file"]::file-selector-button {
-        margin-right: 14px;
-        border: 0;
-        border-radius: 999px;
-        padding: 10px 16px;
-        background: linear-gradient(180deg, var(--brand), var(--brand-dark));
-        color: white;
-        font: inherit;
-        font-weight: 800;
+      .file-upload-shell {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        min-height: 86px;
+        padding: 14px 16px;
+        overflow: hidden;
+        border: 1px solid rgba(220,38,38,.18);
+        border-radius: 22px;
+        background: linear-gradient(180deg, rgba(220,38,38,.12), rgba(220,38,38,.04));
+        box-shadow: none;
         cursor: pointer;
+        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      }
+      .file-upload-shell:hover,
+      .file-upload-shell:focus-within {
+        border-color: rgba(220,38,38,.38);
+        background: linear-gradient(180deg, rgba(220,38,38,.16), rgba(220,38,38,.06));
+      }
+      .file-upload-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .file-upload-icon {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        color: #fff;
+        background: linear-gradient(145deg, var(--brand), var(--brand-dark));
+        box-shadow: 0 8px 18px rgba(220,38,38,.20), inset 0 1px 0 rgba(255,255,255,.24);
+        font-size: 20px;
+        font-weight: 900;
+      }
+      .file-upload-copy { display: grid; gap: 5px; min-width: 0; }
+      .file-upload-title { color: var(--ink); font-size: 15px; font-weight: 900; }
+      .file-upload-name {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .file-upload-button {
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--ink);
+        background: rgba(255,255,255,.04);
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+      }
+      html[data-theme="light"] .file-upload-shell {
+        border-color: rgba(15,23,42,.14);
+        background: linear-gradient(180deg, #f0eeee, #e6e3e3);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+      }
+      html[data-theme="light"] .file-upload-shell:hover,
+      html[data-theme="light"] .file-upload-shell:focus-within {
+        border-color: rgba(185,28,28,.30);
+        background: linear-gradient(180deg, #ede9e9, #dfdada);
+      }
+      html[data-theme="light"] .file-upload-title { color: #111827; }
+      html[data-theme="light"] .file-upload-name { color: #64748b; }
+      html[data-theme="light"] .file-upload-button {
+        border-color: rgba(15,23,42,.10);
+        color: #111827;
+        background: rgba(255,255,255,.64);
+        box-shadow: none;
       }
       textarea { min-height: 100px; resize: vertical; }
       .btn {
@@ -2279,6 +2338,14 @@ function renderPage(content, options = {}) {
         .brand-logo {
           max-height: 176px;
         }
+        .file-upload-shell {
+          grid-template-columns: auto minmax(0, 1fr);
+          gap: 12px 14px;
+        }
+        .file-upload-button {
+          grid-column: 2;
+          justify-self: start;
+        }
       }
     </style>
   </head>
@@ -2303,6 +2370,17 @@ function renderPage(content, options = {}) {
     const customSizeWidth = document.querySelector('[data-custom-width]');
     const customSizeHeight = document.querySelector('[data-custom-height]');
     const customSizeHelper = document.querySelector('[data-custom-size-helper]');
+    const fileUpload = document.querySelector('[data-file-upload]');
+    const fileUploadName = document.querySelector('[data-file-upload-name]');
+
+    if (fileUpload && fileUploadName) {
+      fileUpload.addEventListener('change', () => {
+        const selectedFile = fileUpload.files && fileUpload.files[0];
+        fileUploadName.textContent = selectedFile
+          ? selectedFile.name
+          : 'No file selected · PDF only';
+      });
+    }
 
     function syncThemeUi(theme) {
       if (!themeLabel || !themeIcon) return;
@@ -3490,7 +3568,18 @@ app.get('/', (_req, res) => {
               </div>
             </div>
             <div class="field full"><label>Special instructions</label><textarea name="instructions"></textarea></div>
-            <div class="field full"><label>PDF file</label><input name="artwork" type="file" accept="application/pdf,.pdf" required></div>
+            <div class="field full">
+              <label>PDF file</label>
+              <label class="file-upload-shell">
+                <input class="file-upload-input" name="artwork" type="file" accept="application/pdf,.pdf" required data-file-upload>
+                <span class="file-upload-icon" aria-hidden="true">↑</span>
+                <span class="file-upload-copy">
+                  <span class="file-upload-title">Choose a press-ready PDF</span>
+                  <span class="file-upload-name" data-file-upload-name>No file selected · PDF only</span>
+                </span>
+                <span class="file-upload-button" aria-hidden="true">Browse files</span>
+              </label>
+            </div>
           </div>
           <div style="margin-top:20px;"><button class="btn" type="submit">Inspect PDF and Build Proof</button></div>
         </form>
