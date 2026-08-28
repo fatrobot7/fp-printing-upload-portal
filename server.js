@@ -2276,6 +2276,12 @@ function renderPage(content, options = {}) {
         background: rgba(6, 12, 24, 0.62);
       }
       .helper-card strong { display:block; margin-bottom:6px; }
+      html[data-theme="light"] .helper-card {
+        border-color: rgba(15,23,42,.14);
+        background: linear-gradient(180deg, #f0eeee, #e6e3e3);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+      }
+      html[data-theme="light"] .helper-card > strong { color: #111827; }
       .spec-panel {
         margin-top: 14px;
         display: none;
@@ -2297,6 +2303,11 @@ function renderPage(content, options = {}) {
         margin-bottom: 4px;
       }
       .spec-chip span { color: var(--muted); }
+      html[data-theme="light"] .spec-chip {
+        border-color: rgba(15,23,42,.10);
+        background: rgba(255,255,255,.48);
+      }
+      html[data-theme="light"] .spec-chip strong { color: #334155; }
       a { color: var(--link); }
       @media (max-width: 1100px) {
         .hero { grid-template-columns: 1fr; }
