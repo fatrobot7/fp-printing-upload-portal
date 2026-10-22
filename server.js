@@ -184,6 +184,7 @@ app.use('/assets', express.static(publicDir));
 app.use(express.urlencoded({ extended: true }));
 
 function renderPage(content, options = {}) {
+  const presscheck = options.presscheck === true;
   const categoryDataJson = JSON.stringify(PRODUCT_CATEGORIES);
   const defaultCategoryKey = options.defaultCategoryKey || DEFAULT_CATEGORY_KEY;
   const initialProductSize = options.initialProductSize || '';
@@ -231,7 +232,7 @@ function renderPage(content, options = {}) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FP Printing Upload Portal</title>
+    <title>${presscheck ? 'PressCheck | Print & mail file inspection' : 'FP Printing Upload Portal'}</title>
     <script>
       (() => {
         const savedTheme = localStorage.getItem('fp-printing-theme');
@@ -2405,9 +2406,25 @@ function renderPage(content, options = {}) {
           justify-self: start;
         }
       }
+      .presscheck-header {display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);margin-bottom:28px;}
+      .presscheck-mark {display:grid;place-items:center;width:48px;height:48px;background:#dc2626;color:white;border-radius:14px;font-size:28px;font-weight:900;}
+      .presscheck-header strong {font-size:24px;letter-spacing:-.8px;}
+      .presscheck-header small {display:block;color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
+      .presscheck-footer {display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:28px 4px;color:var(--muted);font-size:13px;}
+      .presscheck-footer a {color:var(--ink);}
+      body.presscheck .hero-copy {max-width:none;}
+      body.presscheck .hero-panel {min-height:0;}
+      body.presscheck h1 {overflow-wrap:anywhere;}
+      body.presscheck .ambient-ui {opacity:.25;}
+      body.presscheck .proof-card {min-width:0;}
+      body.presscheck .two-col {grid-template-columns:minmax(0,1fr);}
+      body.presscheck .pill.info {background:rgba(100,150,200,.16);color:var(--ink);border:1px solid var(--line);}
+      .inspection-progress {margin-top:14px;color:var(--muted);}
+      button:disabled {opacity:.6;cursor:wait;}
+      @media(max-width:640px) {body.presscheck .hero-stats {grid-template-columns:repeat(2,minmax(0,1fr));}}
     </style>
   </head>
-  <body><div class="ambient-ui" aria-hidden="true"><div class="ambient-orb one"></div><div class="ambient-orb two"></div><div class="ambient-orb three"></div><div class="ambient-panel one"></div><div class="ambient-panel two"></div><div class="ambient-line one"></div><div class="ambient-line two"></div><div class="ambient-ring one"></div><div class="ambient-ring two"></div><div class="ambient-crosshair one"></div><div class="ambient-crosshair two"></div><div class="ambient-dots one"></div><div class="ambient-dots two"></div></div><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div><a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/stamp-logo-seal.png" alt="STAMP - Standards Testing for Artwork, Mailing and Prepress"></span></a></div>${content}${footerLinks}</div>
+  <body class="${presscheck ? 'presscheck' : ''}"><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div>${presscheck ? '<a class="presscheck-header" href="/preflight"><span class="presscheck-mark">✓</span><span><strong>PressCheck</strong><small>By FP Printing · Preview</small></span></a>' : '<a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/stamp-logo-seal.png" alt="STAMP - Standards Testing for Artwork, Mailing and Prepress"></span></a>'}</div>${content}${presscheck ? '<footer class="presscheck-footer"><span>Inspect here. Finish in InDesign. Print with confidence.</span><a href="/preflight">Check another file →</a><span>Preview · Not a production approval</span></footer>' : footerLinks}</div>
   <script>
     const productCategories = ${categoryDataJson};
     const defaultCategoryKey = ${JSON.stringify(defaultCategoryKey)};
@@ -2431,6 +2448,21 @@ function renderPage(content, options = {}) {
     const customSizeHelper = document.querySelector('[data-custom-size-helper]');
     const fileUpload = document.querySelector('[data-file-upload]');
     const fileUploadName = document.querySelector('[data-file-upload-name]');
+    const inspectionProgress = document.querySelector('[data-inspection-progress]');
+    if (inspectionProgress) {
+      const form = inspectionProgress.closest('form');
+      const submit = form.querySelector('button[type="submit"]');
+      form.addEventListener('submit', () => {
+        submit.disabled = true;
+        submit.textContent = 'Inspecting your PDF…';
+        inspectionProgress.hidden = false;
+      });
+      window.addEventListener('pageshow', () => {
+        submit.disabled = false;
+        submit.textContent = 'Check this file';
+        inspectionProgress.hidden = true;
+      });
+    }
 
     if (fileUpload && fileUploadName) {
       fileUpload.addEventListener('change', () => {
@@ -2465,7 +2497,7 @@ function renderPage(content, options = {}) {
     }
 
     function formatDimension(value) {
-      return Number(value).toFixed(2).replace(/\.00$/, '');
+      return String(Number(Number(value).toFixed(3)));
     }
 
     function buildSpecData(categoryKey, sizeValue) {
@@ -2710,6 +2742,8 @@ function renderPage(content, options = {}) {
     });
     function setProofMode(mode) {
       currentProofMode = mode;
+      const modeLabel = document.querySelector('[data-current-proof-mode]');
+      if (modeLabel) modeLabel.textContent = ({bleed:'BLEED + TRIM', print:'TRIMMED VIEW', '3d':'ORIENTATION', magnify:'MAGNIFIER'})[mode] || mode.toUpperCase();
       modeButtons.forEach((item) => item.classList.toggle('active', item.getAttribute('data-proof-mode') === mode));
       calloutButtons.forEach((item) => item.classList.toggle('active', item.getAttribute('data-proof-callout-mode') === mode));
       panels.forEach((panel) => {
@@ -2859,7 +2893,7 @@ function parseSizeValue(value) {
 }
 
 function formatDimension(value) {
-  return Number(value).toFixed(2).replace(/\.00$/, '');
+  return String(Number(Number(value).toFixed(3)));
 }
 
 function formatSizeLabel(value) {
@@ -2992,7 +3026,9 @@ async function analyzeImageResolution(buffer) {
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
   const doc = await loadingTask.promise;
   const images = [];
+  const transparencyMasks = [];
 
+  try {
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1 });
@@ -3000,18 +3036,38 @@ async function analyzeImageResolution(buffer) {
     const pageHeightPts = viewport.height;
     const operatorList = await page.getOperatorList();
     const transformStack = [];
+    const groupStack = [];
+    let inTransparencyMask = false;
     let currentTransform = [1, 0, 0, 1, 0, 0];
 
     for (let index = 0; index < operatorList.fnArray.length; index += 1) {
       const fn = operatorList.fnArray[index];
       const args = operatorList.argsArray[index];
 
-      if (fn === pdfjsLib.OPS.save) {
+      if (fn === pdfjsLib.OPS.beginGroup) {
+        groupStack.push(inTransparencyMask);
+        inTransparencyMask = inTransparencyMask || Boolean(args?.[0]?.smask);
         transformStack.push(currentTransform.slice());
         continue;
       }
 
-      if (fn === pdfjsLib.OPS.restore) {
+      if (fn === pdfjsLib.OPS.endGroup) {
+        inTransparencyMask = groupStack.pop() || false;
+        currentTransform = transformStack.pop() || [1, 0, 0, 1, 0, 0];
+        continue;
+      }
+
+      if (fn === pdfjsLib.OPS.save || fn === pdfjsLib.OPS.paintFormXObjectBegin) {
+        transformStack.push(currentTransform.slice());
+        // Form matrices affect placed size. Group matrices are applied by the
+        // enclosed form operator, matching PDF.js (do not apply them twice).
+        if (fn === pdfjsLib.OPS.paintFormXObjectBegin && args?.[0]) {
+          currentTransform = pdfjsLib.Util.transform(currentTransform, args[0]);
+        }
+        continue;
+      }
+
+      if (fn === pdfjsLib.OPS.restore || fn === pdfjsLib.OPS.paintFormXObjectEnd) {
         currentTransform = transformStack.pop() || [1, 0, 0, 1, 0, 0];
         continue;
       }
@@ -3068,7 +3124,9 @@ async function analyzeImageResolution(buffer) {
       const bottomPts = Math.min(...yValues);
       const topPts = Math.max(...yValues);
 
-      images.push({
+      // Only mask *content* is excluded. A photo with an attached alpha mask
+      // is still artwork, and flattened image fragments remain artwork too.
+      (inTransparencyMask ? transparencyMasks : images).push({
         pageNum,
         imageName,
         widthPx,
@@ -3087,6 +3145,9 @@ async function analyzeImageResolution(buffer) {
       });
     }
   }
+  } finally {
+    await loadingTask.destroy();
+  }
 
   const lowResolutionImages = images.filter((image) => image.effectiveDpi < DEFAULT_MIN_ACCEPTABLE_IMAGE_DPI);
   const worstImage = images.reduce((lowest, image) => {
@@ -3096,6 +3157,7 @@ async function analyzeImageResolution(buffer) {
 
   return {
     images,
+    transparencyMasks,
     lowResolutionImages,
     worstImage,
   };
@@ -3383,7 +3445,7 @@ async function generateProofExports(filePath, jobRecord = null) {
   };
 }
 
-function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender, lowResolutionImages = []) {
+function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender, lowResolutionImages = [], inspectionOnly = false) {
   const useLandscape = pageCheck?.orientation === 'landscape';
   const bleedW = useLandscape ? rule.bleedHeight : rule.bleedWidth;
   const bleedH = useLandscape ? rule.bleedWidth : rule.bleedHeight;
@@ -3493,7 +3555,7 @@ function proofSheetHtml(render, pageCheck, label, rule, frontRender, backRender,
               <button type="button" class="proof-angle-btn" data-proof-angle="270">270°</button>
               <button type="button" class="proof-angle-btn" data-proof-angle="360">360°</button>
             </div>
-            <label class="proof-confirm"><input type="checkbox" data-proof-orientation-confirm><span>Orientation looks correct for production<small>Check this before final proof approval so the front/back reading direction is confirmed.</small></span></label>
+            ${inspectionOnly ? '<p class="muted">Visual orientation check only. No approval is recorded and the original PDF stays unchanged.</p>' : '<label class="proof-confirm"><input type="checkbox" data-proof-orientation-confirm><span>Orientation looks correct for production<small>Check this before final proof approval so the front/back reading direction is confirmed.</small></span></label>'}
           </div>
         </div>
       </div>
@@ -3588,7 +3650,7 @@ app.get('/', (req, res) => {
           </div>
           <div class="upload-panel-badge">
             <strong>Staff shortcut</strong>
-            <span class="muted"><a class="staff-action-link" href="/staff">Open the review queue</a> to see approvals, proofs, and unresolved jobs.</span>
+            <span class="muted"><a class="staff-action-link" href="/preflight">Open the preflight workbench</a> for a fast file-only inspection.</span>
           </div>
         </div>
         <div class="info-grid" style="margin-bottom:18px;">
@@ -3688,6 +3750,100 @@ app.get('/', (req, res) => {
     defaultCategoryKey: selectedCategoryKey,
     initialProductSize: revisionSource?.productSize || '',
   }));
+});
+
+app.get('/preflight', (_req, res) => {
+  const categoryOptions = Object.entries(PRODUCT_CATEGORIES)
+    .map(([value, category]) => `<option value="${value}">${category.label}</option>`)
+    .join('');
+
+  res.send(renderPage(`
+    <div class="stack">
+      <div class="card hero-panel">
+        <div class="hero-copy">
+          <a class="eyebrow eyebrow-link" href="/">FP Printing</a>
+          <h1>PressCheck</h1>
+          <p><strong>Check your file. Before it hits the press.</strong></p>
+          <p class="muted">Choose the intended finished size and upload a PDF. The report checks dimensions, assumed bleed, page orientation, and every measurable raster image before you rebuild the job in InDesign.</p>
+          <div class="hero-stats">
+            <div class="stat"><div class="stat-value">DPI map</div><div class="muted">Find and locate low-resolution images</div></div>
+            <div class="stat"><div class="stat-value">Front + back</div><div class="muted">Inspect duplex reading orientation</div></div>
+            <div class="stat"><div class="stat-value">Live proof</div><div class="muted">Magnify artwork and review trim guides</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="upload">
+        <div class="upload-panel-head">
+          <div>
+            <p class="section-kicker">New inspection</p>
+            <h2>Drop in the customer PDF</h2>
+            <p class="muted">Upload → inspect → see what needs fixing. No customer information or approval workflow. Finish the production file in InDesign.</p>
+            <p class="muted">Current checks cover print dimensions, bleed allowance, orientation, and image resolution. Address-space measurements, indicia, and union bug placement are still being built; mailing readiness is not certified.</p>
+          </div>
+          <div class="upload-panel-badge">
+            <strong>Checks included</strong>
+            <span class="muted">Size · bleed allowance · page count · orientation · placed-image DPI</span>
+          </div>
+        </div>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="preflightMode" value="quick">
+          <input type="hidden" name="clientName" value="FP Printing">
+          <input type="hidden" name="jobName" value="Quick preflight">
+          <input type="hidden" name="mailPieceType" value="Internal preflight">
+          <div class="grid">
+            <div class="field full">
+              <div class="selection-shell">
+                <div class="selection-grid">
+                  <div class="field">
+                    <label for="productCategory">Product category</label>
+                    <select id="productCategory" name="productCategory" data-category-select required>
+                      <option value="" selected>Choose a category</option>
+                      ${categoryOptions}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="productSize">Finished size</label>
+                    <select id="productSize" name="productSize" data-size-select required disabled>
+                      <option value="" selected>Choose a category first</option>
+                    </select>
+                    <div class="custom-size-shell" data-custom-size-shell hidden>
+                      <div class="custom-size-grid">
+                        <div><label for="bannerWidth">Width</label><input id="bannerWidth" type="number" inputmode="decimal" placeholder="Width (ft)" data-custom-width></div>
+                        <div><label for="bannerHeight">Height</label><input id="bannerHeight" type="number" inputmode="decimal" placeholder="Height (ft)" data-custom-height></div>
+                      </div>
+                      <p class="muted custom-size-helper" data-custom-size-helper>Choose width and height in feet.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="helper-card">
+                  <strong data-category-heading>Choose a category to begin</strong>
+                  <p class="muted" data-category-helper style="margin-bottom:0;">The expected production specs will appear here.</p>
+                  <div class="spec-panel" data-spec-panel>
+                    <div class="spec-chip"><strong>Required bleed size</strong><span data-spec-bleed></span></div>
+                    <div class="spec-chip"><strong>Finished trim size</strong><span data-spec-trim></span></div>
+                    <div class="spec-chip"><strong>Expected pages</strong><span data-spec-pages></span></div>
+                    <div class="spec-chip"><strong>Resolution</strong><span data-spec-resolution></span></div>
+                    <div class="spec-chip"><strong>Preflight note</strong><span data-spec-note></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field full">
+              <label>PDF file</label>
+              <label class="file-upload-shell">
+                <input class="file-upload-input" name="artwork" type="file" accept="application/pdf,.pdf" required data-file-upload>
+                <span class="file-upload-icon" aria-hidden="true">↑</span>
+                <span class="file-upload-copy"><span class="file-upload-title">Choose PDF to inspect</span><span class="file-upload-name" data-file-upload-name>No file selected · PDF only</span></span>
+                <span class="file-upload-button" aria-hidden="true">Browse files</span>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top:20px;"><button class="btn" type="submit">Check this file</button></div>
+          <p class="inspection-progress" role="status" data-inspection-progress hidden>Checking dimensions and images, then preparing your preview. Large PDFs may take a moment. Please keep this page open.</p>
+        </form>
+      </div>
+    </div>
+  `, { presscheck: true }));
 });
 
 app.get('/jobs/:jobId', (req, res) => {
@@ -3910,6 +4066,7 @@ app.get('/proof-export', async (req, res) => {
 app.post('/upload', upload.single('artwork'), async (req, res) => {
   try {
     if (!req.file) throw new Error('No file uploaded.');
+    const quickPreflight = req.body.preflightMode === 'quick';
 
     const selectedCategoryKey = req.body.productCategory || DEFAULT_CATEGORY_KEY;
     const fallbackSizeValue = PRODUCT_CATEGORIES[selectedCategoryKey]?.sizes?.[0]?.value || LEGAL_POSTCARD_RULE.sizeValue;
@@ -3948,7 +4105,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
 
     const findings = [];
     let overall = 'pass';
-    const lowResolutionImages = imageResolution.lowResolutionImages.filter((image) => image.effectiveDpi < activeRule.minImageDpi);
+    const lowResolutionImages = imageResolution.images.filter((image) => image.effectiveDpi < activeRule.minImageDpi);
 
     findings.push({
       severity: 'pass',
@@ -4017,12 +4174,20 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
     } else if (!mixedOrientation && orientationKinds.every((kind) => kind !== 'unknown')) {
       findings.push({
         severity: 'pass',
-        message: 'Page orientation is consistent',
-        detail: `Detected ${orientationKinds[0]} orientation across all pages, which reduces the risk of one side being upside down.`,
+        message: 'Page shapes are consistent; reading direction needs review',
+        detail: `Detected ${orientationKinds[0]} page dimensions across all pages. This does not detect upside-down artwork. Switch between front and back and use the orientation preview to check reading direction.`,
       });
     }
 
     const minimumResolutionDpi = activeRule.minImageDpi;
+
+    if (imageResolution.transparencyMasks.length) {
+      findings.push({
+        severity: 'info',
+        message: 'Transparency masks separated from artwork',
+        detail: `${imageResolution.transparencyMasks.length} measured mask image(s), used for effects such as shadows, are excluded from artwork DPI failures. This does not certify effect quality; inspect them with the magnifier. Photos and flattened artwork are still checked.`,
+      });
+    }
 
     if (imageResolution.images.length === 0) {
       findings.push({
@@ -4060,7 +4225,9 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
     }
 
     const badgeClass = overall === 'fail' ? 'fail' : overall === 'warning' ? 'warning' : 'pass';
-    const pretty = overall.charAt(0).toUpperCase() + overall.slice(1);
+    const pretty = quickPreflight
+      ? (overall === 'fail' ? 'Needs attention' : overall === 'warning' ? 'Review needed' : 'Automated checks passed · Visual review still required')
+      : overall.charAt(0).toUpperCase() + overall.slice(1);
     const lowResPages = [...new Set(lowResolutionImages.map((image) => image.pageNum))];
     const lowResPrimaryPageNum = lowResPages[0] || null;
     const proofTabs = renders.map((render, index) => {
@@ -4080,6 +4247,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
         frontRender,
         backRender,
         lowResolutionImages.filter((image) => image.pageNum === render.pageNum),
+        quickPreflight,
       );
     }).join('');
 
@@ -4095,7 +4263,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       ? Math.max(...listJobRevisions(revisedJob).map((record) => record.revisionNumber || 1), 1) + 1
       : 1;
     const rootJobId = revisedJob ? (revisedJob.rootJobId || revisedJob.jobId) : jobId;
-    saveJobRecord({
+    if (!quickPreflight) saveJobRecord({
       jobId,
       rootJobId,
       parentJobId: revisedJob?.jobId || null,
@@ -4129,7 +4297,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       imageResolution,
       proofExports: null,
     });
-    if (revisedJob) {
+    if (!quickPreflight && revisedJob) {
       updateJobRecord(revisedJob.jobId, (record) => ({
         ...record,
         updatedAt: new Date().toISOString(),
@@ -4137,22 +4305,22 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
       }));
     }
 
+    const resultTitle = quickPreflight ? req.file.originalname : (req.body.jobName || 'Untitled job');
     res.send(renderPage(`
       <div class="stack">
         <div class="card hero-panel" style="--hero-burst:${heroBurst};">
           <div class="hero-copy">
-            <a class="eyebrow eyebrow-link" href="/">📬 FP Printing print preflight</a>
-            <h1>${req.body.jobName || 'Untitled job'}</h1>
+            <a class="eyebrow eyebrow-link" href="${quickPreflight ? '/preflight' : '/'}">${quickPreflight ? 'PressCheck by FP Printing' : 'FP Printing print preflight'}</a>
+            <h1>${escapeHtml(resultTitle)}</h1>
             <p><span class="pill result-pill ${badgeClass}">${pretty}</span></p>
-            <p class="muted">Client: ${req.body.clientName || 'Unknown'} · ${req.body.email || 'No email'} · ${req.body.mailPieceType || 'Unknown type'}</p>
+            ${quickPreflight ? '' : `<p class="muted">Client: ${req.body.clientName || 'Unknown'} · ${req.body.email || 'No email'} · ${req.body.mailPieceType || 'Unknown type'}</p>`}
             <p class="muted">Selected product: ${activeRule.categoryLabel} · ${activeRule.sizeLabel}</p>
-            <p class="muted">File: <a href="/uploads/${path.basename(req.file.path)}">${req.file.originalname}</a></p>
-            <p class="muted">Job record: ${jobId} · Revision ${revisionNumber}</p>
-            <div class="staff-actions"><a class="staff-action-link" href="/jobs/${encodeURIComponent(jobId)}">Open job details</a><a class="staff-action-link" href="/staff">View staff review queue</a></div>
+            <p class="muted">File: <a href="/uploads/${encodeURIComponent(path.basename(req.file.path))}" target="_blank" rel="noopener">${escapeHtml(req.file.originalname)}</a></p>
+            ${quickPreflight ? '' : `<p class="muted">Job record: ${jobId} · Revision ${revisionNumber}</p><div class="staff-actions"><a class="staff-action-link" href="/jobs/${encodeURIComponent(jobId)}">Open job details</a><a class="staff-action-link" href="/staff">View staff review queue</a></div>`}
             <div class="hero-stats">
               <div class="stat"><div class="stat-value">${pageCount}</div><div class="muted">page(s) detected</div></div>
               <div class="stat"><div class="stat-value">${sizeMb} MB</div><div class="muted">uploaded PDF size</div></div>
-              <div class="stat"><div class="stat-value">${mixedOrientation ? 'Review' : 'Aligned'}</div><div class="muted">orientation status</div></div>
+              <div class="stat"><div class="stat-value">${mixedOrientation ? 'Mixed' : 'Consistent'}</div><div class="muted">page shape · check reading direction</div></div>
               <div class="stat"><div class="stat-value">${imageResolution.worstImage?.effectiveDpi || 'Review'}</div><div class="muted">lowest DPI detected</div></div>
             </div>
           </div>
@@ -4163,15 +4331,15 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
               <div class="proof-controls-grid">
                 <div class="proof-controls-copy">
                   <p class="section-kicker proof-controls-kicker">Proofing controls</p>
-                  <h3>Use these review tools before anyone signs off.</h3>
-                  <p>Flip between bleed, print, 3D, magnify, and proof export so orientation mistakes or edge issues jump out before production.</p>
+                  <h3>${quickPreflight ? 'Inspect the file before preparing it in InDesign.' : 'Use these review tools before anyone signs off.'}</h3>
+                  <p>${quickPreflight ? 'Switch sides, inspect trim guides, magnify images, and check front/back orientation. No approval or proof export is needed.' : 'Flip between bleed, print, 3D, magnify, and proof export so orientation mistakes or edge issues jump out before production.'}</p>
                 </div>
                 <div class="proof-controls-badges">
                   <button type="button" class="proof-controls-badge active" data-proof-callout-mode="bleed"><span>✂</span>Bleed</button>
                   <button type="button" class="proof-controls-badge" data-proof-callout-mode="print"><span>🖨</span>Print</button>
                   <button type="button" class="proof-controls-badge" data-proof-callout-mode="3d"><span>◧</span>3D</button>
                   <button type="button" class="proof-controls-badge" data-proof-callout-mode="magnify"><span>🔍</span>Magnify</button>
-                  <button type="button" class="proof-controls-badge" data-proof-callout-mode="proof"><span>✓</span>Proof</button>
+                  ${quickPreflight ? '' : '<button type="button" class="proof-controls-badge" data-proof-callout-mode="proof"><span>✓</span>Proof</button>'}
                 </div>
               </div>
             </div>
@@ -4183,24 +4351,24 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
               <div style="display:grid; gap:10px; justify-items:end;">
                 <div class="proof-tabs">${proofTabs}</div>
                 ${lowResolutionImages.length ? `<button type="button" class="proof-action-btn" data-lowres-toggle data-lowres-focus="${pageLabelFromIndex(Math.max(0, lowResPrimaryPageNum - 1), lowResPrimaryPageNum)}" data-lowres-label-off="See problems" data-lowres-label-on="Hide problems">See problems</button>` : ''}
-                <a class="proof-action-btn visually-hidden" data-proof-export-link href="/proof-export?file=${encodeURIComponent(path.basename(req.file.path))}&jobName=${encodeURIComponent(req.body.jobName || 'Untitled job')}&jobId=${encodeURIComponent(jobId)}&orientationConfirmed=no">Proof</a>
+                ${quickPreflight ? '' : `<a class="proof-action-btn visually-hidden" data-proof-export-link href="/proof-export?file=${encodeURIComponent(path.basename(req.file.path))}&jobName=${encodeURIComponent(req.body.jobName || 'Untitled job')}&jobId=${encodeURIComponent(jobId)}&orientationConfirmed=no">Proof</a>`}
               </div>
             </div>
             <div class="proof-signal-strip">
-              <div class="proof-signal-chip"><strong>MODE</strong><span>BLEED + TRIM</span></div>
+              <div class="proof-signal-chip"><strong>MODE</strong><span data-current-proof-mode>BLEED + TRIM</span></div>
               <div class="proof-signal-chip"><strong>PRODUCT</strong><span>${activeRule.categoryLabel}</span></div>
               <div class="proof-signal-chip"><strong>SIZE</strong><span>${activeRule.sizeLabel}</span></div>
               <div class="proof-signal-chip"><strong>DPI FLOOR</strong><span>${minimumResolutionDpi}</span></div>
             </div>
             ${proofPanels}
-            <div class="proof-status-note"><strong>Orientation confirmation</strong><p class="muted" data-orientation-status style="margin:8px 0 0;">Waiting on client orientation confirmation</p></div>
-            ${lowResolutionImages.length ? `<div class="proof-lowres-banner"><strong>${lowResolutionImages.length} low-resolution image${lowResolutionImages.length === 1 ? '' : 's'} flagged</strong><p class="muted" style="margin:8px 0 0;">Turn on the low-res highlight to wash the affected placed images in magenta directly on the proof.</p></div>` : ''}
+            ${quickPreflight ? '<div class="proof-status-note"><strong>Inspection only</strong><p class="muted">Preview guides do not prove artwork extends into the bleed. Check the visible edges yourself. Mailing placement tools are not yet included.</p></div>' : '<div class="proof-status-note"><strong>Orientation confirmation</strong><p class="muted" data-orientation-status style="margin:8px 0 0;">Waiting on client orientation confirmation</p></div>'}
+            ${lowResolutionImages.length ? `<div class="proof-lowres-banner"><strong>${lowResolutionImages.length} low-resolution image placement${lowResolutionImages.length === 1 ? '' : 's'} flagged</strong><p class="muted" style="margin:8px 0 0;">Choose “See problems” to locate the orange boxes. Repeated images and flattened fragments may be counted separately.</p></div>` : ''}
             <div class="proof-legend">
               <div class="legend-key"><span class="legend-swatch bleed"></span><strong>Bleed zone</strong><span>trimmed off in production</span></div>
               <div class="legend-key"><span class="legend-swatch trim"></span><strong>Finished size</strong><span>visible after trim</span></div>
               <div class="legend-key"><span class="legend-swatch print"></span><strong>Print view</strong><span>shows the trimmed piece only</span></div>
-              ${lowResolutionImages.length ? '<div class="legend-key"><span class="legend-swatch lowres"></span><strong>Low-res image</strong><span>cyan overlay marks artwork below DPI spec</span></div>' : ''}
-              <div class="legend-key"><span class="legend-swatch export"></span><strong>Proof export</strong><span>72 DPI PDF/PNG with repeated diagonal PROOF watermark</span></div>
+              ${lowResolutionImages.length ? '<div class="legend-key"><span class="legend-swatch lowres"></span><strong>Low-res image</strong><span>orange boxes mark artwork below DPI spec</span></div>' : ''}
+              ${quickPreflight ? '' : '<div class="legend-key"><span class="legend-swatch export"></span><strong>Proof export</strong><span>72 DPI PDF/PNG with repeated diagonal PROOF watermark</span></div>'}
             </div>
           </div>
         </div>
@@ -4222,7 +4390,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
               <div class="meta-chip"><strong>Expected pages</strong><br><span class="muted">${activeRule.expectedPageMessage}</span></div>
               <div class="meta-chip"><strong>Resolution rule</strong><br><span class="muted">${minimumResolutionDpi} DPI minimum</span></div>
               <div class="meta-chip"><strong>Orientation check</strong><br><span class="muted">${mixedOrientation ? 'Mixed, review carefully' : 'Consistent'}</span></div>
-              <div class="meta-chip"><strong>Client orientation signoff</strong><br><span class="muted" data-orientation-status>Waiting on client orientation confirmation</span></div>
+              ${quickPreflight ? '' : '<div class="meta-chip"><strong>Client orientation signoff</strong><br><span class="muted" data-orientation-status>Waiting on client orientation confirmation</span></div>'}
             </div>
           </div>
         </div>
@@ -4238,16 +4406,16 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
         <div class="card">
           <h2>How to read this proof</h2>
           <p class="muted">This preview preserves the PDF inspection checks and builds the proof around the selected product rule. Everything under the magenta edge overlay is outside the finished piece and is expected to trim off. Keep critical copy and logos inside the finished-size boundary.</p>
-          <p><a href="/">Upload another file</a></p>
+          <p><a href="${quickPreflight ? '/preflight' : '/'}">Upload another file</a></p>
         </div>
       </div>
-    `));
+    `, { presscheck: quickPreflight }));
   } catch (error) {
     res.status(400).send(renderPage(`
       <div class="card">
         <p class="muted">Upload failed</p>
         <h1>Something went wrong</h1>
-        <p>${error.message}</p>
+        <p>${escapeHtml(error.message)}</p>
         <p><a href="/">Go back</a></p>
       </div>
     `));
@@ -4261,4 +4429,4 @@ if (process.env.STAMP_SKIP_LISTEN !== '1') {
   });
 }
 
-export { app, loadJobRecord, listJobRecords, listJobRevisions, saveJobRecord, updateJobRecord };
+export { app, analyzeImageResolution, loadJobRecord, listJobRecords, listJobRevisions, saveJobRecord, updateJobRecord };
