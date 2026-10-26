@@ -6,6 +6,7 @@ import pdf from 'pdf-parse';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { createCanvas, PDFDocument } from '@napi-rs/canvas';
 import { fileURLToPath } from 'url';
+import { fork, execFile } from 'node:child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2994,6 +2995,7 @@ async function getPageDimensions(buffer) {
     });
   }
 
+  await loadingTask.destroy();
   return pages;
 }
 
@@ -3144,6 +3146,7 @@ async function analyzeImageResolution(buffer) {
         heightIn: roundDpi((topPts - bottomPts) / 72),
       });
     }
+    page.cleanup();
   }
   } finally {
     await loadingTask.destroy();
@@ -3250,32 +3253,42 @@ function listJobRevisions(job) {
     .sort((a, b) => (a.revisionNumber || 1) - (b.revisionNumber || 1));
 }
 
+function runPdfStage(stage, filePath) {
+  return new Promise((resolve, reject) => {
+    const child = fork(path.join(__dirname, 'scripts/pdf-stage.mjs'), [stage, filePath], {
+      execArgv: ['--max-old-space-size=192'],
+      env: { ...process.env, STAMP_SKIP_LISTEN: '1', PRESSCHECK_METADATA_ONLY: stage === 'images' ? '1' : '0' },
+      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    });
+    let result;
+    let failure;
+    const timeout = setTimeout(() => { failure = 'PDF processing took too long. Please try a smaller PDF.'; child.kill('SIGKILL'); }, 120000);
+    child.stderr.resume();
+    child.on('message', message => { result = message.result; failure = message.error; });
+    child.on('error', error => { clearTimeout(timeout); reject(error); });
+    child.on('exit', code => {
+      clearTimeout(timeout);
+      if (code !== 0 || failure || result === undefined) reject(new Error(failure || 'This PDF exceeded the processing limit. The site is still available; please try a smaller PDF.'));
+      else resolve(result);
+    });
+  });
+}
+
 async function renderProofImages(filePath) {
   const renderDir = getRenderDir(filePath);
   fs.mkdirSync(renderDir, { recursive: true });
-  const pdfData = new Uint8Array(fs.readFileSync(filePath));
-  const doc = await pdfjsLib.getDocument({ data: pdfData }).promise;
-  const renders = [];
-
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
-    const page = await doc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 2 });
-    const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-    const ctx = canvas.getContext('2d');
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const png = await canvas.encode('png');
-    const fileName = `page-${pageNum}.png`;
-    const outputPath = path.join(renderDir, fileName);
-    fs.writeFileSync(outputPath, png);
-    renders.push({
-      pageNum,
-      url: `/proof-renders/${path.basename(renderDir)}/${fileName}`,
-      pixelWidth: canvas.width,
-      pixelHeight: canvas.height,
-    });
-  }
-
-  return renders;
+  const stdout = await new Promise((resolve, reject) => {
+    const python = process.env.PREVIEW_PYTHON || 'python3';
+    const args = [path.join(__dirname, 'scripts/render-preview.py'), filePath, renderDir];
+    const forceArch = process.platform === 'darwin' && process.env.PREVIEW_PYTHON_ARCH;
+    execFile(forceArch ? '/usr/bin/arch' : python, forceArch ? ['-' + forceArch, python, ...args] : args, {
+      timeout: 120000, maxBuffer: 1024 * 1024,
+      env: { ...process.env, PYTHONPATH: path.join(__dirname, '.preview-python') },
+    }, (error, output) => error ? reject(new Error('Preview could not be completed within the processing limits. Please try a smaller PDF.')) : resolve(output));
+  });
+  return JSON.parse(stdout).map(({ fileName, ...render }) => ({
+    ...render, url: `/proof-renders/${path.basename(renderDir)}/${fileName}`,
+  }));
 }
 
 function applyProofWatermark(ctx, width, height) {
@@ -4063,7 +4076,17 @@ app.get('/proof-export', async (req, res) => {
   }
 });
 
-app.post('/upload', upload.single('artwork'), async (req, res) => {
+let inspectionActive = false;
+function reserveInspection(req, res, next) {
+  if (inspectionActive) return res.status(503).set('Retry-After', '10').send(renderPage('<div class="card"><h1>Another file is being checked</h1><p>Please wait a few seconds, then try your upload again.</p><a href="/preflight">Return to PressCheck</a></div>', { presscheck: true }));
+  inspectionActive = true;
+  res.once('finish', () => { inspectionActive = false; });
+  res.once('close', () => { if (!req.inspectionStarted) inspectionActive = false; });
+  // Keep the slot until processing finishes even if the browser disconnects.
+  next();
+}
+app.post('/upload', reserveInspection, upload.single('artwork'), async (req, res) => {
+  req.inspectionStarted = true;
   try {
     if (!req.file) throw new Error('No file uploaded.');
     const quickPreflight = req.body.preflightMode === 'quick';
@@ -4096,7 +4119,7 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
     const buffer = fs.readFileSync(req.file.path);
     const data = await pdf(buffer);
     const pageDimensions = await getPageDimensions(buffer);
-    const imageResolution = await analyzeImageResolution(buffer);
+    const imageResolution = await runPdfStage('images', req.file.path);
     const renders = await renderProofImages(req.file.path);
     const stats = fs.statSync(req.file.path);
     const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
@@ -4416,9 +4439,11 @@ app.post('/upload', upload.single('artwork'), async (req, res) => {
         <p class="muted">Upload failed</p>
         <h1>Something went wrong</h1>
         <p>${escapeHtml(error.message)}</p>
-        <p><a href="/">Go back</a></p>
+        <p><a href="/preflight">Go back</a></p>
       </div>
     `));
+  } finally {
+    inspectionActive = false;
   }
 });
 
@@ -4429,4 +4454,4 @@ if (process.env.STAMP_SKIP_LISTEN !== '1') {
   });
 }
 
-export { app, analyzeImageResolution, loadJobRecord, listJobRecords, listJobRevisions, saveJobRecord, updateJobRecord };
+export { app, analyzeImageResolution, renderProofImages, loadJobRecord, listJobRecords, listJobRevisions, saveJobRecord, updateJobRecord };
