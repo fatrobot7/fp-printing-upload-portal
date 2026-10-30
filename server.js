@@ -2406,7 +2406,8 @@ function renderPage(content, options = {}) {
           justify-self: start;
         }
       }
-      .presscheck-header {display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);margin-bottom:28px;}
+      .presscheck-header {display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--ink);width:100%;margin:0 auto 20px;}
+      .presscheck-emblem {display:block;width:clamp(120px,18vw,170px);height:auto;max-width:100%;border-radius:10px;background:#fff;}
       .presscheck-mark {display:grid;place-items:center;width:48px;height:48px;background:#dc2626;color:white;border-radius:14px;font-size:28px;font-weight:900;}
       .presscheck-header strong {font-size:24px;letter-spacing:-.8px;}
       .presscheck-header small {display:block;color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
@@ -2424,7 +2425,7 @@ function renderPage(content, options = {}) {
       @media(max-width:640px) {body.presscheck .hero-stats {grid-template-columns:repeat(2,minmax(0,1fr));}}
     </style>
   </head>
-  <body class="${presscheck ? 'presscheck' : ''}"><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div>${presscheck ? '<a class="presscheck-header" href="/preflight"><span class="presscheck-mark">✓</span><span><strong>PressCheck</strong><small>By FP Printing · Preview</small></span></a>' : '<a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/stamp-logo-seal.png" alt="STAMP - Standards Testing for Artwork, Mailing and Prepress"></span></a>'}</div>${content}${presscheck ? '<footer class="presscheck-footer"><span>Inspect here. Finish in InDesign. Print with confidence.</span><a href="/preflight">Check another file →</a><span>Preview · Not a production approval</span></footer>' : footerLinks}</div>
+  <body class="${presscheck ? 'presscheck' : ''}"><div class="wrap"><div class="page-masthead"><div class="page-topbar"><button type="button" class="theme-toggle" data-theme-toggle><span data-theme-icon>🌙</span><strong data-theme-label>Dark mode</strong></button></div>${presscheck ? '<a class="presscheck-header" href="/preflight" aria-label="PressCheck home"><img class="presscheck-emblem" src="/assets/presscheck-emblem.png" alt="The Original PressCheck" width="928" height="1415"></a>' : '<a class="brand-lockup" href="/"><span class="brand-logo-shell"><img class="brand-logo" src="/assets/stamp-logo-seal.png" alt="STAMP - Standards Testing for Artwork, Mailing and Prepress"></span></a>'}</div>${content}${presscheck ? '<footer class="presscheck-footer"><span>Inspect here. Finish in InDesign. Print with confidence.</span><a href="/preflight">Check another file →</a><span>Preview · Not a production approval</span></footer>' : footerLinks}</div>
   <script>
     const productCategories = ${categoryDataJson};
     const defaultCategoryKey = ${JSON.stringify(defaultCategoryKey)};
