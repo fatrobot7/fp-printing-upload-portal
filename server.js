@@ -2,7 +2,6 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import pdf from 'pdf-parse';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { createCanvas, PDFDocument } from '@napi-rs/canvas';
 import { fileURLToPath } from 'url';
@@ -2982,21 +2981,28 @@ function analyzePageAgainstRule(page, rule) {
 
 async function getPageDimensions(buffer) {
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
-  const doc = await loadingTask.promise;
-  const pages = [];
-
-  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
-    const page = await doc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 1 });
-    pages.push({
-      pageNum,
-      widthIn: inchesFromPdfPoints(viewport.width),
-      heightIn: inchesFromPdfPoints(viewport.height),
-    });
+  try {
+    const doc = await loadingTask.promise;
+    const pages = [];
+    for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+      const page = await doc.getPage(pageNum);
+      try {
+        const viewport = page.getViewport({ scale: 1 });
+        const text = await page.getTextContent();
+        pages.push({
+          pageNum,
+          widthIn: inchesFromPdfPoints(viewport.width),
+          heightIn: inchesFromPdfPoints(viewport.height),
+          textLength: text.items.reduce((sum, item) => sum + (item.str || '').trim().length, 0),
+        });
+      } finally {
+        page.cleanup();
+      }
+    }
+    return pages;
+  } finally {
+    await loadingTask.destroy();
   }
-
-  await loadingTask.destroy();
-  return pages;
 }
 
 function roundDpi(value) {
@@ -3795,7 +3801,7 @@ app.get('/preflight', (_req, res) => {
           </div>
           <div class="upload-panel-badge">
             <strong>Checks included</strong>
-            <span class="muted">Size · bleed allowance · page count · orientation · placed-image DPI</span>
+            <span class="muted">Portrait, landscape, and rotated PDFs are accepted. Orientation is for visual review; the original file stays unchanged.</span>
           </div>
         </div>
         <form action="/upload" method="post" enctype="multipart/form-data">
@@ -4117,14 +4123,13 @@ app.post('/upload', reserveInspection, upload.single('artwork'), async (req, res
     }
 
     const buffer = fs.readFileSync(req.file.path);
-    const data = await pdf(buffer);
     const pageDimensions = await getPageDimensions(buffer);
     const imageResolution = await runPdfStage('images', req.file.path);
     const renders = await renderProofImages(req.file.path);
     const stats = fs.statSync(req.file.path);
     const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-    const pageCount = data.numpages || 0;
-    const textLength = (data.text || '').trim().length;
+    const pageCount = pageDimensions.length;
+    const textLength = pageDimensions.reduce((sum, page) => sum + page.textLength, 0);
 
     const findings = [];
     let overall = 'pass';
@@ -4187,13 +4192,15 @@ app.post('/upload', reserveInspection, upload.single('artwork'), async (req, res
     const orientationKinds = pageChecks.map((page) => page.orientation);
     const mixedOrientation = new Set(orientationKinds.filter((kind) => kind !== 'unknown')).size > 1;
 
-    if (mixedOrientation && overall !== 'fail') {
+    if (mixedOrientation && (quickPreflight || overall !== 'fail')) {
       findings.push({
-        severity: 'warning',
-        message: 'Front and back orientation may not match',
-        detail: `Detected mixed page orientation across the file (${orientationKinds.join(', ')}). Staff should confirm the job will not print with one side upside down.`,
+        severity: quickPreflight ? 'info' : 'warning',
+        message: quickPreflight ? 'Mixed page orientations accepted' : 'Front and back orientation may not match',
+        detail: quickPreflight
+          ? 'Pages have different width/height orientations. This does not prevent inspection or change the original PDF. Review each side in the viewer; page shape alone cannot determine whether artwork is upside down.'
+          : `Detected mixed page orientation across the file (${orientationKinds.join(', ')}). Staff should confirm the job will not print with one side upside down.`,
       });
-      overall = 'warning';
+      if (!quickPreflight) overall = 'warning';
     } else if (!mixedOrientation && orientationKinds.every((kind) => kind !== 'unknown')) {
       findings.push({
         severity: 'pass',
